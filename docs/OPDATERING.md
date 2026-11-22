@@ -57,6 +57,8 @@ efter udgivelsen, og samme version forsøges aldrig automatisk to gange (fx efte
 3. GitHub Actions (`.github/workflows/release-image.yml`) bygger og skubber
    `ghcr.io/<ejer med små bogstaver>/fleetdeck:<version>` (+ `:stable`/`:beta`). Jobbet fejler, hvis tag og
    `<Version>` ikke passer sammen – serveren venter nemlig på, at `/api/health` melder netop den version.
+   Er menuen (src/Fleetdeck.MacMenu, MacApp.cs) uændret, så kør workflowet med `menu_from` = forrige version (fx `3.45.0`):
+   så genbruges FleetdeckMenu byte for byte fra det billede, og Mac'erne bygger ikke menuen om.
    **Første gang**: gør pakken offentlig på GitHub (Packages → fleetdeck → Package settings → Change visibility → Public).
 4. Når billedet er bygget: opret **GitHub-udgivelsen** for tagget med udgivelsesnoter (vises i bekræftelsen).
    - Beta: sæt "Set as a pre-release". Stabil: lad den være almindelig ("latest").

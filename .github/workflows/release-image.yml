@@ -11,6 +11,10 @@ on:
       tag:
         description: 'Tag, fx v3.16.0'
         required: true
+      menu_from:
+        description: 'Genbrug FleetdeckMenu fra et tidligere billede (fx 3.45.0), når menuen er uændret – så Mac''erne ikke bygger menuen om. Tom = byg med swiftc.'
+        required: false
+        default: ''
 
 permissions:
   contents: write   # GitHub-udgivelsen laves her, når billedet er lagt op
@@ -27,14 +31,29 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
 
       - name: Byg FleetdeckMenu (Apple Silicon og Intel)
+        env:
+          OWNER: ${{ github.repository_owner }}
+          MENU_FROM: ${{ inputs.menu_from }}
         run: |
           set -euo pipefail
           STAMP=$(sed -n 's/.*public const string Marker = "\(fleetdeck-menu-api=[0-9]*\)".*/\1/p' src/Fleetdeck.Shared/MacApp.cs)
           grep -q "let menuStamp = \"$STAMP\"" src/Fleetdeck.MacMenu/main.swift || { echo "::error::main.swift har ikke $STAMP (MacMenuStamp i MacApp.cs)"; exit 1; }
           for a in arm64:arm64 x64:x86_64; do
             out=src/Fleetdeck.MacMenu/build/${a%%:*}; mkdir -p "$out"
-            swiftc -O -target ${a##*:}-apple-macos12 src/Fleetdeck.MacMenu/main.swift -o "$out/FleetdeckMenu"
-            codesign --force -s - -i com.fleetdeck.menu "$out/FleetdeckMenu"
+            if [ -n "$MENU_FROM" ]; then
+              # Samme bytes som i billedet $MENU_FROM (fra dets Mac-DMG): agenten sammenligner menuens SHA-256 og bygger kun
+              # FleetdeckMenu.app om, når den ændres
+              dmg=$(.github/scripts/dmg-from-image.sh "ghcr.io/${OWNER,,}/fleetdeck:$MENU_FROM" "Fleetdeck-mac-${a%%:*}.dmg")
+              mnt=$(mktemp -d); hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$dmg" >/dev/null
+              src=$(find "$mnt" -path '*/Contents/Resources/menu/FleetdeckMenu' | head -1)
+              [ -n "$src" ] || { echo "::error::FleetdeckMenu findes ikke i $MENU_FROM ($dmg)"; exit 1; }
+              cp "$src" "$out/FleetdeckMenu"; chmod 755 "$out/FleetdeckMenu"
+              hdiutil detach "$mnt" >/dev/null
+              shasum -a 256 "$out/FleetdeckMenu"
+            else
+              swiftc -O -target ${a##*:}-apple-macos12 src/Fleetdeck.MacMenu/main.swift -o "$out/FleetdeckMenu"
+              codesign --force -s - -i com.fleetdeck.menu "$out/FleetdeckMenu"
+            fi
             codesign -v "$out/FleetdeckMenu"
             grep -q "$STAMP" "$out/FleetdeckMenu" || { echo "::error::$out/FleetdeckMenu mangler $STAMP"; exit 1; }
             cp src/Fleetdeck.MacMenu/menu-icon@2x.png "$out/"
