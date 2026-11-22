@@ -114,7 +114,6 @@ export function EspPage() {
           {[fw.generated && `Firmware fra ${generatedLabel(fw.generated)}`, SOURCE[fw.source] ?? fw.source, fw.live ? 'opdateres af sig selv' : 'henter ikke fra nettet'].filter(Boolean).join(' · ')}
         </Text>
       </Tooltip>
-      {isAdmin && fw.live && <Anchor size="xs" component="button" onClick={check} disabled={checking} style={{ flex: 'none' }}>{checking ? 'Søger …' : 'Søg efter ny'}</Anchor>}
     </Group>
   );
 
@@ -147,7 +146,14 @@ export function EspPage() {
     <>
       <PageHeader title={<Group gap={8}><IconUsb size={24} />ESP-flash</Group>}
         sub="Flash ESP32-firmware fra browseren over USB – på den pc, ESP'en sidder i. Intet skal installeres.">
-        {isAdmin && <Button variant="default" leftSection={<IconSettings size={16} />} onClick={() => setSettings(true)}>Indstillinger</Button>}
+        {isAdmin && <Group gap="xs">
+          {/* Uden katalog er der intet at søge i – så åbner knappen Indstillinger, hvor kataloget sættes op */}
+          <Tooltip label="Sæt et katalog op under Indstillinger først" disabled={fw.live}>
+            <Button variant="default" leftSection={<IconRefresh size={16} />} disabled={checking}
+              onClick={fw.live ? check : openSettings}>{checking ? 'Søger …' : 'Søg efter ny firmware'}</Button>
+          </Tooltip>
+          <Button variant="default" leftSection={<IconSettings size={16} />} onClick={openSettings}>Indstillinger</Button>
+        </Group>}
       </PageHeader>
       <Stack gap="md">
         {notice !== 'setup' && srcLine}
@@ -165,7 +171,7 @@ export function EspPage() {
           </div></Group>)}
         {!onLocalhost() && <TrustHelp https={st.https} open={false} />}
       </Stack>
-      {settings && <SettingsModal st={st} onClose={() => setSettings(false)} onSaved={refresh} />}
+      {settings && <SettingsModal st={st} onClose={() => setSettings(false)} onSaved={(catalog) => { if (catalog) void check(); else void refresh(); }} />}
       {wifiFor && <WifiModal fw={wifiFor} onClose={() => setWifiFor(null)} />}
     </>
   );
@@ -367,7 +373,7 @@ function TrustHelp({ https, open }: { https: EspHttps; open: boolean }) {
   );
 }
 
-function SettingsModal({ st, onClose, onSaved }: { st: EspStatus; onClose: () => void; onSaved: () => void }) {
+function SettingsModal({ st, onClose, onSaved }: { st: EspStatus; onClose: () => void; onSaved: (catalogChanged?: boolean) => void }) {
   const [url, setUrl] = useState(st.catalogUrl ?? '');
   const [token, setToken] = useState('');
   const [clearToken, setClearToken] = useState(false);
@@ -377,10 +383,12 @@ function SettingsModal({ st, onClose, onSaved }: { st: EspStatus; onClose: () =>
   const save = async () => {
     setBusy(true);
     try {
-      if (url !== (st.catalogUrl ?? '') || token || clearToken) await put('/api/esp/settings', { catalogUrl: url, token: token || null, clearToken: clearToken && !token });
+      const catalog = url !== (st.catalogUrl ?? '') || !!token || clearToken;
+      if (catalog) await put('/api/esp/settings', { catalogUrl: url, token: token || null, clearToken: clearToken && !token });
       if (ssid.trim() && (ssid.trim() !== (st.wifi.ssid ?? '') || pass)) await put('/api/esp/wifi', { ssid, password: pass || null });
       notifyOk('Gemt');
-      onSaved(); onClose();
+      // Nyt katalog eller ny nøgle: søg efter firmware med det samme i stedet for at vente på næste runde
+      onSaved(catalog && url.trim().length > 0); onClose();
     } catch (e) { notifyErr(e); } finally { setBusy(false); }
   };
   const forget = async () => {

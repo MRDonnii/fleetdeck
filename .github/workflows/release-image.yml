@@ -113,7 +113,26 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "image=ghcr.io/${OWNER,,}/fleetdeck" >> "$GITHUB_OUTPUT"
-          case "$VERSION" in *-*) echo "channel=beta" >> "$GITHUB_OUTPUT" ;; *) echo "channel=stable" >> "$GITHUB_OUTPUT" ;; esac
+
+      # :stable flyttes KUN, når GitHub-udgivelsen for tagget findes og ikke er en prerelease (Beta). Findes udgivelsen
+      # ikke endnu, laves den nedenfor som Beta – så røres :stable heller ikke. Beta-udgivelser får kun :<version>.
+      - name: Skal :stable flyttes?
+        id: ch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+          IMAGE: ${{ steps.v.outputs.image }}
+        run: |
+          set -euo pipefail
+          PRE=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.prerelease' 2>/dev/null || echo missing)
+          case "$TAG" in *-*) PRE=true ;; esac
+          if [ "$PRE" = false ]; then
+            echo "Udgivelsen $TAG er Stabil – :stable flyttes"
+            echo "tags=$IMAGE:stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "Udgivelsen $TAG er Beta eller findes ikke endnu ($PRE) – :stable røres ikke"
+            echo "tags=" >> "$GITHUB_OUTPUT"
+          fi
 
       # arm64 (Raspberry Pi 4/5, ARM-NAS): kun runtime-trinnet kører under QEMU, resten bygges én gang (se Dockerfile)
       - uses: docker/setup-qemu-action@v3
@@ -135,7 +154,7 @@ jobs:
             REQUIRE_MAC_MENU=1
           tags: |
             ${{ steps.v.outputs.image }}:${{ steps.v.outputs.version }}
-            ${{ steps.v.outputs.image }}:${{ steps.v.outputs.channel }}
+            ${{ steps.ch.outputs.tags }}
           labels: |
             org.opencontainers.image.version=${{ steps.v.outputs.version }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

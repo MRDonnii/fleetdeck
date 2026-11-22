@@ -55,7 +55,7 @@ efter udgivelsen, og samme version forsøges aldrig automatisk to gange (fx efte
 2. Tag commit'en med **præcis** `v<Version>` og skub tagget (`deploy/deploy.sh` gør det):
    `git tag -a v3.16.0 -m "Fleetdeck 3.16.0" && git push origin v3.16.0`
 3. GitHub Actions (`.github/workflows/release-image.yml`) bygger og skubber
-   `ghcr.io/<ejer med små bogstaver>/fleetdeck:<version>` (+ `:stable`/`:beta`). Jobbet fejler, hvis tag og
+   `ghcr.io/<ejer med små bogstaver>/fleetdeck:<version>` (+ `:stable`, men kun når GitHub-udgivelsen ikke er en prerelease). Jobbet fejler, hvis tag og
    `<Version>` ikke passer sammen – serveren venter nemlig på, at `/api/health` melder netop den version.
    Er menuen (src/Fleetdeck.MacMenu, MacApp.cs) uændret, så kør workflowet med `menu_from` = forrige version (fx `3.45.0`):
    så genbruges FleetdeckMenu byte for byte fra det billede, og Mac'erne bygger ikke menuen om.
