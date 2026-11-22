@@ -43,7 +43,7 @@ jobs:
             if [ -n "$MENU_FROM" ]; then
               # Samme bytes som i billedet $MENU_FROM (fra dets Mac-DMG): agenten sammenligner menuens SHA-256 og bygger kun
               # FleetdeckMenu.app om, når den ændres
-              dmg=$(.github/scripts/dmg-from-image.sh "ghcr.io/${OWNER,,}/fleetdeck:$MENU_FROM" "Fleetdeck-mac-${a%%:*}.dmg")
+              dmg=$(.github/scripts/dmg-from-image.sh "ghcr.io/$(echo "$OWNER" | tr A-Z a-z)/fleetdeck:$MENU_FROM" "Fleetdeck-mac-${a%%:*}.dmg")
               mnt=$(mktemp -d); hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "$dmg" >/dev/null
               src=$(find "$mnt" -path '*/Contents/Resources/menu/FleetdeckMenu' | head -1)
               [ -n "$src" ] || { echo "::error::FleetdeckMenu findes ikke i $MENU_FROM ($dmg)"; exit 1; }
