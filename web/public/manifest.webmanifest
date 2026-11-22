@@ -1,0 +1,23 @@
+{
+  "name": "Fleetdeck",
+  "short_name": "Fleetdeck",
+  "description": "Styring af hjemmets computere og servere: programmer, opdateringer, helbred, Docker og VM'er",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b0b0d",
+  "theme_color": "#0b0b0d",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "fleetdeck.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

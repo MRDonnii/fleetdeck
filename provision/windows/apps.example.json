@@ -1,0 +1,115 @@
+[
+  {
+    "Enabled": true,
+    "Name": "Google Chrome",
+    "Type": "winget",
+    "Id": "Google.Chrome",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "7-Zip",
+    "Type": "winget",
+    "Id": "7zip.7zip",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Notepad++",
+    "Type": "winget",
+    "Id": "Notepad++.Notepad++",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Thunderbird",
+    "Type": "winget",
+    "Id": "Mozilla.Thunderbird",
+    "Args": "--locale en-US",
+    "Note": "Engelsk udgave som nu"
+  },
+  {
+    "Enabled": true,
+    "Name": "Discord",
+    "Type": "winget",
+    "Id": "Discord.Discord",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Spotify",
+    "Type": "winget",
+    "Id": "Spotify.Spotify",
+    "Args": "",
+    "Note": "Kan ikke installeres som administrator",
+    "NotAdmin": true
+  },
+  {
+    "Enabled": true,
+    "Name": "VLC",
+    "Type": "winget",
+    "Id": "VideoLAN.VLC",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Greenshot",
+    "Type": "winget",
+    "Id": "Greenshot.Greenshot",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "LibreOffice",
+    "Type": "winget",
+    "Id": "TheDocumentFoundation.LibreOffice",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Adobe Acrobat Reader",
+    "Type": "winget",
+    "Id": "Adobe.Acrobat.Reader.64-bit",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Steam",
+    "Type": "winget",
+    "Id": "Valve.Steam",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "CrystalDiskInfo",
+    "Type": "winget",
+    "Id": "CrystalDewWorld.CrystalDiskInfo",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": ".NET 8 Desktop Runtime",
+    "Type": "winget",
+    "Id": "Microsoft.DotNet.DesktopRuntime.8",
+    "Args": "",
+    "Note": ""
+  },
+  {
+    "Enabled": true,
+    "Name": "Visual C++ 2015-2022 x64",
+    "Type": "winget",
+    "Id": "Microsoft.VCRedist.2015+.x64",
+    "Args": "",
+    "Note": ""
+  }
+]

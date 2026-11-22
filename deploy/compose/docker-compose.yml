@@ -1,0 +1,45 @@
+# Fleetdeck med docker compose – på en vilkårlig Docker-vært (Linux, Synology, QNAP, Raspberry Pi 4/5 med 64-bit OS …).
+# Vejledning: docs/installation.md
+#
+#   1. Læg filen i en tom mappe, fx /opt/fleetdeck, og lav evt. en .env-fil ved siden af (se variablerne nedenfor).
+#   2. docker compose up -d
+#   3. Åbn http://<værtens IP>:8585 – opsætningsguiden opretter administratoren og resten.
+#
+# Opdatering: docker compose pull && docker compose up -d   (data ligger i ./data og overlever)
+#
+# Variabler (.env eller miljøet):
+#   FLEETDECK_TAG   stable (standard), beta eller et versionsnummer som 3.24.1
+#   FLEETDECK_PORT  porten på værten (standard 8585)
+#   TZ              serverens tidszone til planlagte opdateringer og backup, fx Europe/Stockholm (standard UTC)
+#   SERVER_URL      adressen som maskinerne bruger til serveren, fx http://192.168.1.10:8585 (kan også sættes i guiden)
+name: fleetdeck
+
+services:
+  fleetdeck:
+    image: ghcr.io/mrdonnii/fleetdeck:${FLEETDECK_TAG:-stable}
+    container_name: fleetdeck
+    restart: unless-stopped
+    ports:
+      - "${FLEETDECK_PORT:-8585}:8585"     # web og agenter (http)
+      # - "8443:8443"                     # valgfri https: fjern # her og ved HTTPS_PORT nedenfor
+    environment:
+      TZ: ${TZ:-UTC}
+      SERVER_URL: ${SERVER_URL:-}
+      # Netværksboot (PXE) og "Find automatisk" bruger broadcast og virker ikke bag Dockers NAT.
+      # Brug dem med network_mode: host (se nederst) – ellers lad dem være slået fra.
+      PXE: "0"
+      DISCOVERY: "0"
+      # HTTPS_PORT: "8443"                # selvsigneret certifikat i ./data/keys (eller HTTPS_CERT/HTTPS_KEY med egne filer)
+    volumes:
+      - ./data:/data                      # database, nøgler og backup – det eneste, der skal tages backup af
+      - ./winsetup:/winsetup              # valgfri: Windows-installationsfiler, netværksboot, drivere og USB-nøgle
+    healthcheck:
+      test: ["CMD", "dotnet", "/app/Fleetdeck.Server.dll", "--healthcheck"]
+      interval: 60s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    # Netværksboot af Windows/Ubuntu og "Find automatisk": slet "ports:" ovenfor, sæt PXE og DISCOVERY til "1",
+    # og fjern # i de to linjer herunder. Der må ikke køre en anden DHCP-proxy/TFTP-server på værten.
+    # network_mode: host
+    # cap_add: [NET_ADMIN]

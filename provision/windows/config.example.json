@@ -1,0 +1,123 @@
+{
+  "BackupName": "MIN-PC",
+  "UserFolders": [
+    {
+      "Name": "Desktop",
+      "Label": "Skrivebord",
+      "Enabled": true
+    },
+    {
+      "Name": "Documents",
+      "Label": "Dokumenter",
+      "Enabled": true
+    },
+    {
+      "Name": "Pictures",
+      "Label": "Billeder",
+      "Enabled": true
+    },
+    {
+      "Name": "Videos",
+      "Label": "Videoer",
+      "Enabled": true
+    },
+    {
+      "Name": "Music",
+      "Label": "Musik",
+      "Enabled": true
+    },
+    {
+      "Name": "Downloads",
+      "Label": "Overførsler",
+      "Enabled": true
+    }
+  ],
+  "AppSettings": [
+    {
+      "Name": "Notepad++",
+      "Path": "%APPDATA%\\Notepad++",
+      "Enabled": true
+    },
+    {
+      "Name": "VS Code",
+      "Path": "%APPDATA%\\Code\\User",
+      "Enabled": true
+    },
+    {
+      "Name": "Thunderbird (mail)",
+      "Path": "%APPDATA%\\Thunderbird",
+      "Enabled": true
+    },
+    {
+      "Name": "FileZilla",
+      "Path": "%APPDATA%\\FileZilla",
+      "Enabled": true
+    },
+    {
+      "Name": "Greenshot",
+      "Path": "%APPDATA%\\Greenshot",
+      "Enabled": true
+    },
+    {
+      "Name": "Git (.gitconfig)",
+      "Path": "%USERPROFILE%\\.gitconfig",
+      "Enabled": true
+    },
+    {
+      "Name": "Windows Terminal",
+      "Path": "%LOCALAPPDATA%\\Packages\\Microsoft.WindowsTerminal_8wekyb3d8bbwe\\LocalState",
+      "Enabled": true
+    },
+    {
+      "Name": "PuTTY (sessioner)",
+      "Registry": "HKCU\\Software\\SimonTatham",
+      "Enabled": true
+    },
+    {
+      "Name": "7-Zip",
+      "Registry": "HKCU\\Software\\7-Zip",
+      "Enabled": true
+    }
+  ],
+  "AppearanceKeys": [
+    {
+      "Name": "Tema (lys-mørk)",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
+    },
+    {
+      "Name": "Accentfarve",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent"
+    },
+    {
+      "Name": "Vinduesfarver",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\DWM"
+    },
+    {
+      "Name": "Stifinder og proceslinje",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"
+    },
+    {
+      "Name": "Proceslinjens placering",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3"
+    },
+    {
+      "Name": "Søgefelt",
+      "Key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+      "Values": [
+        "SearchboxTaskbarMode"
+      ]
+    },
+    {
+      "Name": "Skrivebord",
+      "Key": "HKCU\\Control Panel\\Desktop"
+    },
+    {
+      "Name": "Mus",
+      "Key": "HKCU\\Control Panel\\Mouse"
+    },
+    {
+      "Name": "Tastatur",
+      "Key": "HKCU\\Control Panel\\Keyboard"
+    }
+  ]
+}

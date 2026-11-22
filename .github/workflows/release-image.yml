@@ -1,0 +1,135 @@
+# Docker-billedet til en Fleetdeck-udgivelse: ghcr.io/<ejer>/fleetdeck:<version>
+# Kører, når et versions-tag (v3.16.0, v3.17.0-beta.1 …) skubbes – eller manuelt med et tag.
+# Udgiv først GitHub-udgivelsen, når dette job er grønt (se docs/OPDATERING.md).
+name: Docker-billede til udgivelse
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag, fx v3.16.0'
+        required: true
+
+permissions:
+  contents: write   # GitHub-udgivelsen laves her, når billedet er lagt op
+  packages: write
+
+jobs:
+  # Den native menulinje på Mac (FleetdeckMenu, Swift/AppKit) kan kun bygges med Apples værktøjer: én binær pr. arkitektur,
+  # ad hoc-signeret, med versionsstemplet tjekket. Billedet nedenfor lægger dem i Mac-pakken (Fleetdeck.app/Contents/Resources/menu).
+  macmenu:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Byg FleetdeckMenu (Apple Silicon og Intel)
+        run: |
+          set -euo pipefail
+          STAMP=$(sed -n 's/.*public const string Marker = "\(fleetdeck-menu-api=[0-9]*\)".*/\1/p' src/Fleetdeck.Shared/MacApp.cs)
+          grep -q "let menuStamp = \"$STAMP\"" src/Fleetdeck.MacMenu/main.swift || { echo "::error::main.swift har ikke $STAMP (MacMenuStamp i MacApp.cs)"; exit 1; }
+          for a in arm64:arm64 x64:x86_64; do
+            out=src/Fleetdeck.MacMenu/build/${a%%:*}; mkdir -p "$out"
+            swiftc -O -target ${a##*:}-apple-macos12 src/Fleetdeck.MacMenu/main.swift -o "$out/FleetdeckMenu"
+            codesign --force -s - -i com.fleetdeck.menu "$out/FleetdeckMenu"
+            codesign -v "$out/FleetdeckMenu"
+            grep -q "$STAMP" "$out/FleetdeckMenu" || { echo "::error::$out/FleetdeckMenu mangler $STAMP"; exit 1; }
+            cp src/Fleetdeck.MacMenu/menu-icon@2x.png "$out/"
+            file "$out/FleetdeckMenu"
+          done
+          [ "$(src/Fleetdeck.MacMenu/build/$( [ "$(uname -m)" = arm64 ] && echo arm64 || echo x64)/FleetdeckMenu --version)" = "$STAMP" ]
+
+      # Agenten bygger menuen om til FleetdeckMenu.app på Mac'en (Info.plist = src/Fleetdeck.MacMenu/Info.plist, holdt lig med
+      # MacMenuBundle.InfoPlist() af testene) og signerer den ad hoc. Her tjekkes det samme med Apples egne værktøjer.
+      - name: FleetdeckMenu.app som agenten bygger den (Info.plist, ad hoc-signatur)
+        run: |
+          set -euo pipefail
+          plutil -lint src/Fleetdeck.MacMenu/Info.plist
+          A=$( [ "$(uname -m)" = arm64 ] && echo arm64 || echo x64 )
+          T=$(mktemp -d)/FleetdeckMenu.app
+          mkdir -p "$T/Contents/MacOS" "$T/Contents/Resources"
+          cp src/Fleetdeck.MacMenu/Info.plist "$T/Contents/Info.plist"
+          cp "src/Fleetdeck.MacMenu/build/$A/FleetdeckMenu" "$T/Contents/MacOS/"
+          cp src/Fleetdeck.MacMenu/menu-icon@2x.png "$T/Contents/Resources/"
+          codesign --force --sign - --identifier com.fleetdeck.menu "$T"
+          codesign --verify --deep --strict --verbose=2 "$T"
+          [ "$(defaults read "$T/Contents/Info" CFBundleIdentifier)" = com.fleetdeck.menu ]
+          [ "$("$T/Contents/MacOS/FleetdeckMenu" --version)" = "$(sed -n 's/.*public const string Marker = "\(fleetdeck-menu-api=[0-9]*\)".*/\1/p' src/Fleetdeck.Shared/MacApp.cs)" ]
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fleetdeckmenu
+          path: src/Fleetdeck.MacMenu/build/
+          if-no-files-found: error
+
+  image:
+    needs: macmenu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      # FleetdeckMenu fra macOS-jobbet (Dockerfile stopper med REQUIRE_MAC_MENU=1, hvis den mangler)
+      - uses: actions/download-artifact@v4
+        with:
+          name: fleetdeckmenu
+          path: src/Fleetdeck.MacMenu/build/
+
+      - name: FleetdeckMenu skal være eksekverbar
+        run: chmod 755 src/Fleetdeck.MacMenu/build/*/FleetdeckMenu
+
+      - name: Version og tag skal passe sammen
+        id: v
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          VERSION=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -1)
+          if [ "v$VERSION" != "$TAG" ]; then
+            echo "::error::Tagget $TAG passer ikke med <Version>$VERSION</Version> i Directory.Build.props"; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${OWNER,,}/fleetdeck" >> "$GITHUB_OUTPUT"
+          case "$VERSION" in *-*) echo "channel=beta" >> "$GITHUB_OUTPUT" ;; *) echo "channel=stable" >> "$GITHUB_OUTPUT" ;; esac
+
+      # arm64 (Raspberry Pi 4/5, ARM-NAS): kun runtime-trinnet kører under QEMU, resten bygges én gang (se Dockerfile)
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            REQUIRE_MAC_MENU=1
+          tags: |
+            ${{ steps.v.outputs.image }}:${{ steps.v.outputs.version }}
+            ${{ steps.v.outputs.image }}:${{ steps.v.outputs.channel }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.v.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Først nu findes billedet: så må "Opdatér Fleetdeck" se versionen (deploy.sh laver ikke længere udgivelsen selv)
+      - name: GitHub-udgivelse (Beta), når billedet er lagt op
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "Udgivelsen $TAG findes allerede"; exit 0; fi
+          NOTES=$(git log -1 --format=%B HEAD 2>/dev/null | sed '/^Co-Authored-By:/d')
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --prerelease --title "Fleetdeck $VERSION (Beta)" --notes "${NOTES:-Fleetdeck $VERSION.}"

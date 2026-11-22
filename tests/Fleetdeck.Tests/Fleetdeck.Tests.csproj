@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- Agentens opsætningsvindue (WinForms) bruges ikke i testene: så kan de køre på Linux -->
+    <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fleetdeck.Server\Fleetdeck.Server.csproj" />
+    <ProjectReference Include="..\..\src\Fleetdeck.Agent.Windows\Fleetdeck.Agent.Windows.csproj" />
+    <ProjectReference Include="..\..\src\Fleetdeck.MacPack\Fleetdeck.MacPack.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Backup-testene bygger serverens endpoints (WebApplication) for at kontrollere adgangskravene -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <!-- Testene er bygget til win-x64, men backup-testene bruger SQLite: læg også det native bibliotek til Linux/macOS ved siden af -->
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <None Include="$(NuGetPackageRoot)sqlite/*/runtimes/linux-$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant())/native/libe_sqlite3.so" Link="libe_sqlite3.so" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <None Include="$(NuGetPackageRoot)sqlite/*/runtimes/osx-$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant())/native/libe_sqlite3.dylib" Link="libe_sqlite3.dylib" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <None Include="Fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- Database-tests (SQLite i hukommelsen): RID'en er win-x64, så Linux-udgaven af SQLite kopieres med, når testene køres på Linux -->
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <None Include="$(NuGetPackageRoot)sqlite/*/runtimes/linux-x64/native/libe_sqlite3.so" Link="libe_sqlite3.so" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

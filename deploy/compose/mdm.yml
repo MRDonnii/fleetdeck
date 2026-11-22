@@ -1,0 +1,29 @@
+# Fleetdecks MDM-server (NanoHUB = NanoMDM + KMFDDM) til valgfri Apple-styring af iPads – eksempel til docker compose.
+# Normalt starter Fleetdeck selv containeren via agenten (Indstillinger → Apple-styring). Brug kun denne fil ved manuel opsætning:
+#   1. Fleetdeck → Indstillinger → Apple-styring → "Værdier til manuel opsætning": læg værdierne i en .env-fil ved siden af denne fil
+#      (FD_MDM_API_KEY, FD_MDM_WEBHOOK_URL, FD_MDM_HMAC_KEY) og hent fleetdeck-ca.pem ned i ./mdm-data/.
+#   2. docker compose -f mdm.yml up -d
+#   3. Skriv MDM-serverens interne adresse (fx http://<værtens IP>:9004) i Fleetdeck.
+#
+# Offentlig adgang (Cloudflare-tunnel, samme hostname to gange med hver sin sti – vises også i Fleetdeck):
+#   <mdm.ditdomæne.dk>  Path ^/mdm$      → http://<MDM-serverens IP>:9004   (MDM-protokollen)
+#   <mdm.ditdomæne.dk>  Path ^/enroll/   → http://<Fleetdecks IP>:8585      (tilmeldingslinks)
+# Ingen andre stier: /api/v1 (MDM-serverens API) og Fleetdecks brugerflade må aldrig være offentlige.
+# Bot Fight Mode skal være slået fra for domænet (kan ikke undtages på Cloudflares gratis-plan).
+services:
+  fleetdeck-mdm:
+    image: ghcr.io/micromdm/nanohub:0.2.0@sha256:3ea7fc5cee6396ed70c2fe26d5c72d57dc9547205d1be2fab0f804bf3de7f7ae
+    container_name: fleetdeck-mdm
+    restart: unless-stopped
+    ports:
+      - "9004:9004"          # kun hjemmenettet – åbn den ikke i routeren
+    volumes:
+      - ./mdm-data:/app/db   # push-certifikat, kø, DDM og fleetdeck-ca.pem
+    environment:
+      NANOHUB_API_KEY: ${FD_MDM_API_KEY:?mangler}
+      NANOHUB_WEBHOOK_URL: ${FD_MDM_WEBHOOK_URL:?mangler}
+      NANOHUB_WEBHOOK_HMAC_KEY: ${FD_MDM_HMAC_KEY:-}
+      NANOHUB_CA: /app/db/fleetdeck-ca.pem
+      NANOHUB_STORAGE: file
+      NANOHUB_STORAGE_DSN: /app/db/data
+      NANOHUB_LISTEN: ":9004"

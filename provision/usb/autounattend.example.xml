@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Svarfil til Windows 11 Pro (dansk). Ligger i roden af installations-USB'en.
+  - Dansk sprog, tastatur og tidszone
+  - Spørger KUN om hvilken disk der skal bruges (intet slettes automatisk)
+  - Opretter den lokale administrator __USER__ (udfyldes, når USB-nøglen gøres klar) uden adgangskode;
+    adgangskoden vælges i vinduet ved første login (Bootstrap.ps1)
+  - Nøglen nedenfor er Microsofts offentlige standardnøgle til Pro: den vælger
+    kun udgaven. Windows aktiveres af din digitale licens på bundkortet.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+  <settings pass="windowsPE">
+    <component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <SetupUILanguage>
+        <UILanguage>__LANG__</UILanguage>
+      </SetupUILanguage>
+      <InputLocale>__INPUTLOCALE__</InputLocale>
+      <SystemLocale>__LANG__</SystemLocale>
+      <UILanguage>__LANG__</UILanguage>
+      <UserLocale>__LANG__</UserLocale>
+    </component>
+    <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <UserData>
+        <ProductKey>
+          <Key>VK7JG-NPHTM-C97JM-9MPGT-3V66T</Key>
+          <WillShowUI>OnError</WillShowUI>
+        </ProductKey>
+        <AcceptEula>true</AcceptEula>
+      </UserData>
+    </component>
+  </settings>
+
+  <settings pass="specialize">
+    <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <ComputerName>__PCNAME__</ComputerName>
+      <TimeZone>__TIMEZONE__</TimeZone>
+    </component>
+    <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <RunSynchronous>
+        <!-- Ingen automatisk BitLocker-kryptering med lokal konto (ellers ender genoprettelsesnøglen ingen steder) -->
+        <RunSynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <Path>reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\BitLocker" /v PreventDeviceEncryption /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <Path>reg.exe add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <!-- Opret kontoen og gør den til administrator via SID (virker uanset om gruppen hedder Administrators eller Administratorer) -->
+        <RunSynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <Path>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$u='__USER__'; New-LocalUser -Name $u -FullName $u -NoPassword -AccountNeverExpires | Out-Null; Set-LocalUser -Name $u -PasswordNeverExpires $true; Add-LocalGroupMember -SID 'S-1-5-32-544' -Member $u"</Path>
+        </RunSynchronousCommand>
+      </RunSynchronous>
+    </component>
+  </settings>
+
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <InputLocale>__INPUTLOCALE__</InputLocale>
+      <SystemLocale>__LANG__</SystemLocale>
+      <UILanguage>__LANG__</UILanguage>
+      <UserLocale>__LANG__</UserLocale>
+    </component>
+    <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <ProtectYourPC>3</ProtectYourPC>
+      </OOBE>
+      <AutoLogon>
+        <Enabled>true</Enabled>
+        <LogonCount>99</LogonCount>
+        <Username>__USER__</Username>
+        <Password>
+          <Value></Value>
+          <PlainText>true</PlainText>
+        </Password>
+      </AutoLogon>
+      <FirstLogonCommands>
+        <!-- Find Bootstrap.ps1 (C:\WinSetupBoot via $OEM$, ellers på USB-nøglen) og start det -->
+        <SynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <Description>Windows Opsætning</Description>
+          <CommandLine>cmd.exe /c for %d in (C D E F G H I J K L M N) do @if exist "%d:\WinSetupBoot\Bootstrap.ps1" (start "" powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File "%d:\WinSetupBoot\Bootstrap.ps1" &amp; exit /b 0)</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
+    </component>
+  </settings>
+</unattend>

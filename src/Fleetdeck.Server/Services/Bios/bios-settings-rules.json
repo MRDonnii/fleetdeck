@@ -1,0 +1,36 @@
+{
+  "about": "Regler for gendannelse af BIOS-indstillinger. Navne sammenlignes uden mellemrum, tegn og store bogstaver (\"Secure Boot\" = \"SecureBoot\" = \"secureboot\"). Mønstrene er regulære udtryk mod navnet og visningsnavnet. Første regel, der passer, gælder. Alt andet er \"common\": forvalgt, når værdien er ændret og stadig gyldig. \"drivers\" begrænser en regel til bestemte drivere (udeladt = alle).",
+  "version": 1,
+  "rules": [
+    {
+      "class": "never",
+      "match": ["password", "passphrase", "pwd$", "computrace", "absolute", "alarm", "resetbios", "debugcmd", "networkofflinelocker", "chassisintrusion", "coverremoval", "tamper", "clearsecuritychip", "cleartpm", "cleartcg", "physicalpresence"],
+      "warn": "Springes altid over: envejsindstilling, adgangskode, alarm eller sikkerhedsfunktion."
+    },
+    {
+      "class": "ask",
+      "match": ["secureboot", "bootmode", "csm", "legacyboot", "osoptimized", "bootsequence", "bootorder", "bootpriority", "startupsequence", "uefibootoption"],
+      "warn": "Kan gøre maskinen ubootbar. Bootlister gendannes kun, hvis alle elementer findes i den nye BIOS."
+    },
+    {
+      "class": "ask",
+      "match": ["securitychip", "tpm", "tcg", "ptt", "deviceguard", "sgx", "kerneldma", "virtualizationbasedsecurity", "windowsuefifirmwareupdate", "allowflashing", "previousversion", "flashbiosupdate", "requireadmin", "requiresvp", "f12"],
+      "warn": "Kan udløse BitLocker-genoprettelse eller ændre, hvem der må opdatere BIOS'en."
+    },
+    {
+      "class": "ask",
+      "match": ["configuresata", "sataoperation", "sataport", "sata\\d", "nvme", "raid", "ahci", "m2slot", "storage"],
+      "warn": "Kan gøre systemdisken usynlig, så maskinen ikke starter."
+    },
+    {
+      "class": "ask",
+      "match": ["usbsupport", "usbport", "usbenablement", "usbbios", "usblegacy", "legacyusb", "smartusbprotection", "frontusb", "rearusb", "usbstorage", "keyboard"],
+      "warn": "Kan slå tastatur eller USB-porte fra."
+    },
+    {
+      "class": "ask",
+      "match": ["onboardethernet", "onboardlan", "ethernetlan", "networkstack", "wirelesslan", "wlan", "pxe", "ipv4", "ipv6"],
+      "warn": "Kan slå netværket fra, så Fleetdeck mister forbindelsen til maskinen."
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+/*
+ * Mobilvenlig Fleetdeck (telefoner op til 48em ≈ 768 px).
+ * - Tabeller bliver til kort: hver række er en blok, og hver celle får kolonnens navn som lille label (data-label sættes af tableLabels.ts).
+ * - Knapper og ikoner bliver store nok at ramme med en finger (mindst ~36 px).
+ * - Inputfelter bruger 16 px tekst, så iPhone ikke zoomer ind.
+ * - Dialoger fylder skærmens bredde.
+ */
+
+html, body { -webkit-text-size-adjust: 100%; }
+
+@media (max-width: 48em) {
+  /* ingen vandret scroll på hele siden */
+  #root { overflow-x: clip; }
+
+  /* ---------- tabeller som kort ---------- */
+  /* ScrollArea lægger indholdet i "display: table", som vokser med teksten – på mobil skal kortene følge skærmens bredde */
+  .mantine-ScrollArea-viewport > div:has(> .mantine-Table-table:not(.ws-keep-table)) { display: block !important; min-width: 0 !important; }
+  .mantine-ScrollArea-root:has(.mantine-Table-table:not(.ws-keep-table)) .mantine-ScrollArea-scrollbar[data-orientation="horizontal"] { display: none; }
+  .mantine-Table-table:not(.ws-keep-table) { min-width: 0 !important; width: 100% !important; table-layout: auto; }
+  .mantine-Table-table:not(.ws-keep-table) > .mantine-Table-thead { display: none; }
+  .mantine-Table-table:not(.ws-keep-table) > .mantine-Table-tbody { display: block; }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+    padding: 12px 14px; border-bottom: 1px solid var(--table-border-color, var(--mantine-color-default-border));
+  }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td {
+    display: block; padding: 0 !important; border: 0 !important;
+    width: auto !important; max-width: 100%; min-width: 0; overflow-wrap: anywhere; overflow: hidden;
+    font-size: 15px; line-height: 1.4;
+  }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td:empty { display: none; }
+  /* den første celle med tekst (typisk navnet) får sin egen linje */
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td[data-main] { flex: 1 1 100%; font-weight: 600; }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td[data-label]::before {
+    content: attr(data-label); display: block; font-size: 12px; font-weight: 500; line-height: 1.2;
+    color: var(--mantine-color-dimmed); margin-bottom: 2px; text-transform: none;
+  }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td[data-main]::before { display: none; }
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td > .mantine-Stack-root,
+  .mantine-Table-table:not(.ws-keep-table) .mantine-Table-td > div { max-width: 100% !important; }
+  /* indhold med fast bredde (fx fremdriftsbjælker) må ikke stikke ud */
+  .mantine-Table-td [style*="width"] { max-width: 100%; }
+  .mantine-Code-root { white-space: normal; overflow-wrap: anywhere; }
+
+  /* ---------- tryk-venlige knapper ---------- */
+  .mantine-Button-root[data-size="compact-xs"], .mantine-Button-root[data-size="compact-sm"],
+  .mantine-Button-root[data-size="xs"] { min-height: 36px; padding-inline: 12px; font-size: 14px; }
+  .mantine-ActionIcon-root { min-width: 36px; min-height: 36px; }
+  .mantine-Menu-item { min-height: 44px; font-size: 15px; }
+  .mantine-Tabs-tab { min-height: 44px; font-size: 15px; }
+  .mantine-NavLink-root { min-height: 44px; }
+  .mantine-NavLink-label { font-size: 16px; }
+  .mantine-Checkbox-label, .mantine-Switch-label { font-size: 15px; }
+  .mantine-SegmentedControl-label { min-height: 32px; display: flex; align-items: center; justify-content: center; }
+
+  /* ---------- læsbar tekst ---------- */
+  .mantine-Input-input, .mantine-Textarea-input, .mantine-Select-input, .mantine-TagsInput-inputField { font-size: 16px !important; }
+  .mantine-Badge-root[data-size="xs"]:not([data-circle]) { font-size: 11px; height: 20px; padding-inline: 7px; }
+  .mantine-Badge-root[data-size="xs"][data-circle] { font-size: 11px; min-width: 18px; height: 18px; padding-inline: 4px; }
+  .mantine-Badge-root[data-size="sm"] { font-size: 12px; height: 22px; }
+  .mantine-Text-root[data-size="xs"] { font-size: 13px; }
+
+  /* ---------- paneler, dialoger og beskeder ---------- */
+  .mantine-AppShell-main { padding-inline: 12px !important; }
+  .mantine-Modal-inner { padding: 8px !important; }
+  .mantine-Modal-content { flex: 0 0 calc(100vw - 16px) !important; max-width: calc(100vw - 16px) !important; }
+  .mantine-Notifications-root { max-width: calc(100vw - 24px); }
+  .mantine-Paper-root { min-width: 0; }
+}

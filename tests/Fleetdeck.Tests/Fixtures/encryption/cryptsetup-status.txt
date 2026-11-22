@@ -1,0 +1,10 @@
+/dev/mapper/dm_crypt-0 is active and is in use.
+  type:    LUKS2
+  cipher:  aes-xts-plain64
+  keysize: 512 bits
+  key location: keyring
+  device:  /dev/nvme0n1p3
+  sector size:  512
+  offset:  32768 sectors
+  size:    1997795328 sectors
+  mode:    read/write

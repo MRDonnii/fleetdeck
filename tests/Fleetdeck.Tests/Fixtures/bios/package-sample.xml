@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package name="BIOS_Q9ZJY" id="q9zjy79usa" version="Q9ZKT79A" hide="False">
+  <Title default="EN"><Desc id="EN">BIOS Update Utility - 10/11</Desc></Title>
+  <Severity type="2" />
+  <Vendor>Lenovo</Vendor>
+  <ReleaseDate>2026-04-09</ReleaseDate>
+  <Reboot type="5" />
+  <Install rc="0" type="cmd" default="EN"><Cmdline id="EN">%PACKAGEPATH%\q9zjy79usa.exe /verysilent /quietflash</Cmdline></Install>
+  <DetectInstall><_Bios><Level>Q9ZKT79*</Level></_Bios></DetectInstall>
+  <Dependencies>
+    <And>
+      <_OS><OS>WIN10</OS><OS>WIN11</OS></_OS>
+      <_Bios>
+        <Level>Q9ZKT0*</Level>
+        <Level>Q9ZKT1*</Level>
+        <Level>Q9ZKT6*</Level>
+        <Level>Q9ZKT70*</Level>
+        <Level>Q9ZKT74*</Level>
+        <Level>Q9ZKT75*</Level>
+        <Level>Q9ZKT76*</Level>
+        <Level>Q9ZKT77*</Level>
+        <Level>Q9ZKT78*</Level>
+      </_Bios>
+    </And>
+  </Dependencies>
+  <Files>
+    <Installer><File><Name>q9zjy79usa.exe</Name><CRC>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</CRC><Size>1024</Size></File></Installer>
+    <Readme default="EN"><File id="EN"><Name>q9zjy79usa.txt</Name><CRC>4444444444444444444444444444444444444444444444444444444444444444</CRC><Size>900</Size></File></Readme>
+  </Files>
+</Package>

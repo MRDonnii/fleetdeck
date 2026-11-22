@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fleetdeck.Agent.Windows/Fleetdeck.Agent.Windows.csproj" />
+    <Project Path="src/Fleetdeck.Agent.Unix/Fleetdeck.Agent.Unix.csproj" />
+    <Project Path="src/Fleetdeck.MacApp/Fleetdeck.MacApp.csproj" />
+    <Project Path="src/Fleetdeck.MacPack/Fleetdeck.MacPack.csproj" />
+    <Project Path="src/Fleetdeck.Server/Fleetdeck.Server.csproj" />
+    <Project Path="src/Fleetdeck.Shared/Fleetdeck.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fleetdeck.Tests/Fleetdeck.Tests.csproj" />
+  </Folder>
+</Solution>

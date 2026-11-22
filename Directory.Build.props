@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <Version>3.45.0</Version>
+    <Company>Fleetdeck</Company>
+    <Product>Fleetdeck</Product>
+    <PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+  </PropertyGroup>
+  <!-- Legacy-bygget til ældre Intel-Mac'er (macOS 10.15 Catalina og 11 Big Sur): Mac-agenten og Fleetdeck.app på .NET 8, hvis
+       binærer kræver macOS 10.15 (.NET 9/10 og Avalonia 12 kræver macOS 12). Kun Shared, Agent.Unix og MacApp skifter (se deres csproj);
+       egne obj-/bin-mapper, så det almindelige byg ikke bliver forvirret. Byg: dotnet publish … -r osx-x64 -p:FleetdeckLegacy=true -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**;obj-legacy/**;bin-legacy/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FleetdeckLegacy)' == 'true'">
+    <BaseIntermediateOutputPath>obj-legacy/</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin-legacy/</BaseOutputPath>
+    <DefineConstants>$(DefineConstants);FLEETDECK_LEGACY</DefineConstants>
+  </PropertyGroup>
+  <!-- Byggefiler i en kort sti (Windows' 260-tegns grænse). Sæt WS_ARTIFACTS til en kort mappe ved lokal udvikling. -->
+  <PropertyGroup Condition="'$(WS_ARTIFACTS)' != ''">
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(WS_ARTIFACTS)</ArtifactsPath>
+  </PropertyGroup>
+</Project>

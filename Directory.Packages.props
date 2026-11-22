@@ -1,0 +1,39 @@
+<Project>
+  <!-- Central versionsstyring af alle NuGet-pakker -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.15" />
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
+    <PackageVersion Include="SSH.NET" Version="2026.0.1" />
+    <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageVersion Include="System.Management" Version="10.0.15" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.15" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.0.5" />
+    <!-- Mac-appen (menulinjen). Legacy-bygget (FleetdeckLegacy=true, net8.0, Intel-Mac'er med macOS 10.15–11) bruger Avalonia 11:
+         Avalonia 12 og .NET 9/10 kræver macOS 12. -->
+    <PackageVersion Include="Avalonia" Version="12.1.6" Condition="'$(FleetdeckLegacy)' != 'true'" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.6" Condition="'$(FleetdeckLegacy)' != 'true'" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.6" Condition="'$(FleetdeckLegacy)' != 'true'" />
+    <PackageVersion Include="Avalonia" Version="11.3.23" Condition="'$(FleetdeckLegacy)' == 'true'" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.3.23" Condition="'$(FleetdeckLegacy)' == 'true'" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.23" Condition="'$(FleetdeckLegacy)' == 'true'" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.6" />
+    <!-- Test -->
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+# Linjeskift: .cmd skal have CRLF, shell-scripts LF (ellers virker de ikke)
+*.cmd text eol=crlf
+*.sh text eol=lf
+Fleetdeck/docker/* text eol=lf
+*.ps1 -text
+*.xml -text

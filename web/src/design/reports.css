@@ -1,0 +1,30 @@
+/* Rapporter: liste til venstre, rapporten til højre (under md: vælger i stedet for listen) */
+.fd-reports { display: grid; grid-template-columns: 1fr; gap: var(--mantine-spacing-md); align-items: start; }
+@media (min-width: 62em) { .fd-reports { grid-template-columns: 250px minmax(0, 1fr); } }
+.fd-reports-nav { position: sticky; top: 72px; }
+.fd-report-item { display: block; width: 100%; padding: 9px 10px; border-radius: var(--mantine-radius-sm); border-left: 3px solid transparent; }
+.fd-report-item:hover { background: var(--mantine-color-default-hover); }
+.fd-report-item[data-active] { background: var(--mantine-primary-color-light); border-left-color: var(--mantine-primary-color-filled); color: var(--mantine-primary-color-light-color); }
+.fd-report-item:focus-visible { outline: 2px solid var(--mantine-primary-color-filled); outline-offset: 1px; }
+
+/* printvenlig udgave (Udskriv / Gem som PDF) */
+.report-print { display: none; }
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+  body:has(> .report-print) > *:not(.report-print) { display: none !important; }
+  .report-print { display: block; }
+  .report-sheet, .report-sheet * { color: #000 !important; background: transparent !important; box-shadow: none !important; }
+  .report-sheet { font: 9pt Arial, Helvetica, sans-serif; }
+  .report-sheet h1 { font-size: 16pt; margin: 0 0 2pt; }
+  .report-sheet h2 { font-size: 11.5pt; margin: 12pt 0 3pt; break-after: avoid; }
+  .report-sheet .rs-sub { margin: 0 0 4pt; color: #444 !important; }
+  .report-sheet .rs-stats { margin: 4pt 0 6pt; font-weight: 600; }
+  .report-sheet table { border-collapse: collapse; width: 100%; }
+  .report-sheet thead { display: table-header-group; }
+  .report-sheet th, .report-sheet td { text-align: left; vertical-align: top; padding: 2pt 4pt; border-bottom: 0.5pt solid #999; }
+  .report-sheet th { border-bottom: 1pt solid #000; }
+  .report-sheet .num { text-align: right; white-space: nowrap; }
+  .report-sheet tr { break-inside: avoid; }
+}
+
+@media (max-width: 48em) { .fd-report-filters { flex-basis: 100% !important; } .fd-report-filters > * { width: 100% !important; } }

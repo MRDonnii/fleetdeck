@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Fleetdeck-agent til Linux (Ubuntu/Debian): én selvstændig fil, kører som systemd-tjeneste -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework Condition="'$(FleetdeckLegacy)' == 'true'">net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Fleetdeck.Agent.Unix</RootNamespace>
+    <AssemblyName>fleetdeck-agent</AssemblyName>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <!-- alle processortyper i én restore (x64, Raspberry Pi 64- og 32-bit) -->
+    <RuntimeIdentifiers>linux-x64;linux-arm64;linux-arm;linux-musl-x64;linux-musl-arm64;osx-arm64;osx-x64</RuntimeIdentifiers>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);CA1416</NoWarn><!-- bygges kun til Linux -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fleetdeck.Shared\Fleetdeck.Shared.csproj" />
+  </ItemGroup>
+</Project>

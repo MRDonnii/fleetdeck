@@ -1,0 +1,43 @@
+﻿
+<ModelList version="1.0">
+ <Model name="ThinkCentre M999q" arch="Intel">
+  <Types>
+   <Type>19X1</Type>
+   <Type>19X2</Type>
+  </Types>
+  <BIOS version="Q9ZKT79A_1.0.0.121" image="q9zk" date="2026-04-10" crc="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" md5="00000000000000000000000000000000">https://download.lenovo.com/pccbbs/thinkcentre_bios/q9zjy79usa.exe</BIOS>
+  <SCCM os="win10" version="*" date="2023-06-27" crc="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb">https://download.lenovo.com/pccbbs/thinkcentre_drivers/tc_m999q_w1064.exe</SCCM>
+ </Model>
+ <Model name="ThinkCentre M999s" arch="Intel">
+  <Types>
+   <Type>19X3</Type>
+  </Types>
+  <BIOS version="Q9ZKT79A_1.0.0.121" image="q9zk" date="2026-04-10" crc="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" md5="00000000000000000000000000000000">https://download.lenovo.com/pccbbs/thinkcentre_bios/q9zjy79usa.exe</BIOS>
+ </Model>
+ <Model name="ThinkCentre M888x" arch="Intel">
+  <Types>
+   <Type>18C1</Type>
+  </Types>
+  <BIOS version="Q8AKT2BA_1.0.0.43" image="q8ak" date="2025-02-03" crc="cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc">https://download.lenovo.com/pccbbs/thinkcentre_bios/q8ajy2busa.exe</BIOS>
+ </Model>
+ <Model name="ThinkCentre M777x" arch="Intel">
+  <Types>
+   <Type>17E1</Type>
+  </Types>
+  <BIOS version="Q7XKT63A_1.0.0.3F" image="q7xk" date="2024-04-25" crc="dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd">https://download.lenovo.com/pccbbs/thinkcentre_bios/q7xjy63usa.exe</BIOS>
+ </Model>
+ <Model name="ThinkPad Z99 Gen 1" arch="Intel">
+  <Types>
+   <Type>29ZZ</Type>
+   <Type>29ZY</Type>
+  </Types>
+  <BIOS version="1.60" image="z9he" date="2026-01-15" crc="eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee">https://download.lenovo.com/pccbbs/mobiles/z9hur25w.exe</BIOS>
+ </Model>
+ <Model name="ThinkStation Q1" arch="Intel">
+  <Types>
+   <Type>16G1</Type>
+  </Types>
+  <SCCM os="win11" version="*" date="2024-01-01">https://download.lenovo.com/pccbbs/thinkcentre_drivers/ts_q1_w11.exe</SCCM>
+ </Model>
+ <Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><Reference URI=""/></SignedInfo></Signature>
+</ModelList>

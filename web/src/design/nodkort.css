@@ -1,0 +1,31 @@
+/* Nødkort: kortet vises på siden og udskrives alene (A4, sort/hvid). Print-kopien ligger direkte under <body>. */
+.nodkort-print { display: none; }
+
+.nodkort { font-size: 14px; line-height: 1.45; }
+.nodkort h1 { font-size: 22px; margin: 0 0 4px; }
+.nodkort h2 { font-size: 16px; margin: 18px 0 6px; padding-bottom: 2px; border-bottom: 1px solid currentColor; }
+.nodkort .nk-lead { margin: 0 0 8px; opacity: .8; }
+.nodkort ol, .nodkort ul { margin: 4px 0; padding-left: 22px; }
+.nodkort li { margin: 2px 0; }
+.nodkort table { border-collapse: collapse; width: 100%; margin: 4px 0; }
+.nodkort th, .nodkort td { text-align: left; vertical-align: top; padding: 4px 6px; border: 1px solid rgba(128, 128, 128, .45); }
+.nodkort th { width: 32%; font-weight: 600; }
+.nodkort .nk-secret { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.15em; font-weight: 700; letter-spacing: .04em; overflow-wrap: anywhere; }
+.nodkort .nk-blank { display: inline-block; min-width: 16em; border-bottom: 1px solid currentColor; height: 1.1em; }
+.nodkort .nk-note { font-size: 12px; opacity: .8; margin: 2px 0; }
+.nodkort section { margin-bottom: 6px; }
+
+@media print {
+  @page { size: A4 portrait; margin: 14mm 14mm 16mm; }
+  html, body { background: #fff !important; color: #000 !important; }
+  /* kun kortet: resten af appen (menu, fanerne, beskeder og dialoger) skjules */
+  body:has(> .nodkort-print) > *:not(.nodkort-print) { display: none !important; }
+  .nodkort-print { display: block; }
+  .nodkort, .nodkort * { color: #000 !important; background: transparent !important; box-shadow: none !important; opacity: 1 !important; }
+  .nodkort { font-size: 10.5pt; font-family: Arial, Helvetica, sans-serif; }
+  .nodkort h1 { font-size: 17pt; }
+  .nodkort h2 { font-size: 12.5pt; break-after: avoid; }
+  .nodkort th, .nodkort td { border: 1px solid #000; }
+  .nodkort section, .nodkort table, .nodkort tr { break-inside: avoid; }
+  .nodkort .nk-ipad { break-inside: avoid; }
+}

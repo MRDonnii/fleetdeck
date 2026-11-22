@@ -1,0 +1,26 @@
+{
+    "ComputerName":  "STUE-PC",
+    "MountPoint":  "C:",
+    "EncryptionMethod":  6,
+    "AutoUnlockEnabled":  null,
+    "AutoUnlockKeyStored":  false,
+    "MetadataVersion":  2,
+    "VolumeStatus":  2,
+    "ProtectionStatus":  0,
+    "LockStatus":  0,
+    "EncryptionPercentage":  57,
+    "WipePercentage":  0,
+    "VolumeType":  0,
+    "CapacityGB":  237.77,
+    "KeyProtector":  [
+                         {
+                             "KeyProtectorId":  "{0F1E2D3C-4B5A-4968-8776-655443322110}",
+                             "AutoUnlockProtector":  null,
+                             "KeyProtectorType":  3,
+                             "KeyFileName":  "",
+                             "RecoveryPassword":  "309540-054054-123915-625218-602910-100716-346984-130779",
+                             "KeyCertificateType":  null,
+                             "Thumbprint":  ""
+                         }
+                     ]
+}

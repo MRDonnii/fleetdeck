@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/bin-legacy
+**/obj-legacy
+**/node_modules
+web/dist
+src/Fleetdeck.Server/wwwroot
+**/*.user
+.vs
+.vscode
+provision
+docs
+deploy/unraid
+*.md
+.git

@@ -1,0 +1,18 @@
+BitLocker-drevkryptering: Konfigurationsværktøj version 10.0.26100
+Copyright (C) 2013 Microsoft Corporation. Alle rettigheder forbeholdes.
+
+Diskenhed C: [Windows]
+Alle nøglebeskyttere
+
+    TPM:
+      Id: {6B4C1D2E-3F40-4A5B-8C6D-7E8F90A1B2C3}
+      Profil til PCR-validering:
+        7, 11
+
+    Numerisk adgangskode:
+      Id: {a1b2c3d4-e5f6-4789-9abc-def012345678}
+      Adgangskode:
+        466895-217492-569250-069608-104434-135707-527241-083622
+      Sikkerhedskopitype:
+        Sikkerhedskopi af Microsoft-konto
+

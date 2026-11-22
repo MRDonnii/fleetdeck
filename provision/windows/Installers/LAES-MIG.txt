@@ -1,0 +1,12 @@
+Her ligger installationsfiler til programmer der ikke findes i winget
+(fx FileZilla, AMD Software, AMD Chipset eller et program fra en producents hjemmeside).
+
+Brug knappen "Tilføj installationsfil…" i Windows Opsætning. Så kopieres filen hertil
+og kommer på programlisten. Markér først rækken (fx "FileZilla Client") i listen, så
+bliver filen sat på den række.
+
+Tavse parametre (så installationen kører uden at spørge):
+  .msi-filer:                         /qn /norestart   (sættes automatisk)
+  NSIS-installationsprogrammer:       /S               (fx FileZilla, AMD Chipset)
+  Inno Setup-installationsprogrammer: /VERYSILENT /NORESTART
+  Ukendt:                             lad feltet stå tomt, så viser installationsprogrammet sit eget vindue

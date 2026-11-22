@@ -1,0 +1,116 @@
+<!doctype html><html lang="da"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box}body{margin:0;background:#0b0f17;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e6e9ef;font-size:13px}
+.page{width:1200px;padding:24px 28px 30px}
+.lbl{display:inline-block;font:800 13px Inter,sans-serif;color:#0b0f17;background:#facc15;padding:3px 10px;border-radius:6px;margin-bottom:10px}
+h2{margin:0 0 4px;font-size:20px}.sub{color:#8a93a6;margin-bottom:14px}
+.card{background:#121827;border:1px solid #1f2738;border-radius:12px}
+.btn{display:inline-block;border:1px solid #2a3347;border-radius:7px;padding:6px 11px;color:#cbd2df;font-size:12.5px;white-space:nowrap}
+.btn.p{background:#4f46e5;border-color:#4f46e5;color:#fff;font-weight:600}.btn.r{border-color:#5b2330;color:#fca5a5}
+.seg{display:inline-flex;border:1px solid #232b3b;border-radius:9px;overflow:hidden}.seg span{padding:8px 14px;color:#9aa3b5;border-left:1px solid #232b3b}.seg span:first-child{border-left:0}.seg span.a{background:#4f46e5;color:#fff;font-weight:600}
+.bd{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:99px;background:#1e2a44;color:#93b4ff;white-space:nowrap}
+.bd.gr{background:#12332a;color:#34d399}.bd.or{background:#3a2a12;color:#fbbf24}.bd.rd{background:#3b1520;color:#f87171}.bd.gy{background:#1b2232;color:#8a93a6}
+.risk-sikker{background:#12332a;color:#34d399}.risk-moderat{background:#3a2a12;color:#fbbf24}.risk-avanceret{background:#3b1520;color:#f87171}
+.d{color:#8a93a6;font-size:12px}.n{font-weight:650}
+.tg{width:30px;height:17px;border-radius:99px;background:#2a3347;position:relative;flex:none}.tg:after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#8a93a6}
+.tg.on{background:#4f46e5}.tg.on:after{left:15px;background:#fff}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}.dot.ok{background:#34d399}.dot.dr{background:#f59e0b}.dot.no{background:#4b5568}.dot.na{background:transparent;border:1px solid #4b5568}
+.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:11.5px;color:#93a1bd}
+.tabs{display:flex;gap:2px;border-bottom:1px solid #1f2738;margin-bottom:16px}.tabs span{padding:9px 14px;color:#8a93a6}.tabs span.a{color:#fff;border-bottom:2px solid #4f46e5}
+.stat{display:flex;flex-direction:column;gap:2px;padding:12px 16px;min-width:130px}.stat b{font-size:22px;font-variant-numeric:tabular-nums}
+/* A */
+.agrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.cat{padding:14px 16px}.cat h3{margin:0;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.it{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #1b2232}.it:first-of-type{border-top:0}.it .t{flex:1;min-width:0}
+/* B */
+.split{display:grid;grid-template-columns:1fr 400px;gap:14px}.tr{display:grid;grid-template-columns:18px 1fr 84px 104px 70px;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid #1b2232}
+.tr.h{color:#7b859a;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;border-top:0}.tr.sel{background:#16203a}.grp{padding:9px 14px 5px;color:#c7cfdd;font-weight:700;font-size:12px;border-top:1px solid #1f2738;background:#0f1522}
+.det{padding:18px}.kv{display:grid;grid-template-columns:120px 1fr;gap:7px 10px;font-size:12.5px}.kv>span:nth-child(odd){color:#7b859a}
+.chg{border:1px solid #1f2738;border-radius:8px;padding:8px 10px;margin-top:8px;background:#0e1424}
+/* C */
+.mx{display:grid;grid-template-columns:200px 120px repeat(7,1fr) 110px;gap:0;align-items:stretch}
+.mx>div{padding:9px 10px;border-top:1px solid #1b2232;display:flex;align-items:center}.mx .hh{color:#7b859a;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;border-top:0;line-height:1.25}
+.cell{justify-content:center}.cell i{display:block;width:100%;height:22px;border-radius:5px;font-style:normal;font-size:11px;display:grid;place-items:center;font-weight:600}
+.c-ok{background:#12332a;color:#34d399}.c-dr{background:#3a2a12;color:#fbbf24}.c-no{background:#1b2232;color:#6b7488}.c-off{background:transparent;color:#4b5568;border:1px dashed #2a3347}
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.lv{padding:16px;border:1px solid #1f2738;border-radius:12px;background:#121827}.lv.a{border-color:#4f46e5;box-shadow:0 0 0 1px #4f46e5 inset;background:#151a33}
+.lv h4{margin:0 0 4px;font-size:16px;display:flex;justify-content:space-between}.chips span{display:inline-block;margin:6px 6px 0 0;padding:3px 9px;border-radius:99px;background:#1b2232;color:#cbd2df;font-size:11.5px}
+.note{border-left:3px solid #f59e0b;background:#1d1a12;padding:9px 12px;border-radius:0 8px 8px 0;color:#e8d9b0;font-size:12.5px}
+</style></head><body><div id="out"></div><script>
+const CATS=[
+ ["Telemetri og sporing",[["Diagnosedata på laveste niveau","sikker","ok",1],["Telemetritjenesten (DiagTrack)","moderat","ok",1],["Reklame-id","sikker","ok",1],["Aktivitetshistorik","sikker","ok",1],["Sporing af app-start","sikker","ok",1],["Placering slået fra som standard","moderat","no",0]]],
+ ["Reklamer og forslag",[["Forslag og anbefalinger i Start","sikker","dr",1],["Tips og reklamer på låseskærmen","sikker","ok",1],["Forslag i Indstillinger","sikker","ok",1],["'Få endnu mere ud af Windows'","sikker","dr",1],["Reklamer i Stifinder","sikker","ok",1]]],
+ ["AI, Copilot og Recall",[["Copilot i Windows","sikker","ok",1],["Copilot-appen","moderat","ok",1],["Recall","sikker","na",1],["AI i Paint og Notesblok","moderat","no",0]]],
+ ["Medfølgende apps",[["Clipchamp","sikker","ok",1],["Reklamespil (Candy Crush m.fl.)","moderat","ok",1],["Microsoft Nyheder og MSN Vejret","sikker","ok",1],["Personer","sikker","ok",1,"kan ikke installeres igen"],["Xbox-apps og Game Bar","avanceret","no",0]]],
+];
+const st={ok:'<span class="bd gr">slået fra</span>',dr:'<span class="bd or">slået til igen</span>',no:'<span class="bd gy">ikke ændret</span>',na:'<span class="bd gy">gælder ikke</span>'};
+const rk=r=>`<span class="bd risk-${r}">${r}</span>`;
+const machineHead=(l,t)=>`<div class="lbl">${l}</div><h2>STUE-PC</h2><div class="sub">${t}</div>
+<div class="tabs"><span>Oversigt</span><span>Programmer</span><span>Opdateringer</span><span class="a">Debloat &amp; privatliv</span><span>Jobs</span><span>Indstillinger</span></div>`;
+
+// ---------------------------------------------------------------- A: kategorikort med kontakter
+const A=`<div class="page">${machineHead('A · Kategorikort med kontakter','Én kontakt pr. punkt, grupperet i kort. Profilen vælges øverst, og afvigelser lyser orange.')}
+<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+ <div><div class="d" style="margin-bottom:5px">Niveau</div><div class="seg"><span>Intet</span><span>Let</span><span class="a">Anbefalet</span><span>Maks</span></div></div>
+ <div style="flex:1"></div>
+ <div class="card" style="display:flex"><div class="stat"><span class="d">Slået fra</span><b style="color:#34d399">38</b></div><div class="stat" style="border-left:1px solid #1f2738"><span class="d">Slået til igen</span><b style="color:#fbbf24">2</b></div><div class="stat" style="border-left:1px solid #1f2738"><span class="d">Mangler</span><b>5</b></div></div>
+</div>
+<div class="card" style="padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+ <div class="tg on"></div><div style="flex:1"><span class="n">Hold håndhævet</span> <span class="d">· tjekkes dagligt og efter store Windows-opdateringer</span></div>
+ <div class="seg" style="font-size:12px"><span>Giv besked</span><span class="a">Anvend igen</span></div>
+ <span class="d">Sidst tjekket i dag 06:12 · Windows 11 24H2 Pro</span>
+</div>
+<div class="agrid">${CATS.map(([c,items])=>`<div class="card cat"><h3>${c}<span class="d" style="font-weight:400;margin-left:auto">${items.filter(i=>i[3]).length}/${items.length} valgt</span></h3><div style="margin-top:8px">
+${items.map(i=>`<div class="it"><div class="tg ${i[3]?'on':''}"></div><div class="t"><div>${i[0]}${i[4]?` <span class="bd rd">${i[4]}</span>`:''}</div></div>${rk(i[1])}${st[i[2]]}</div>`).join('')}</div></div>`).join('')}</div>
+<div style="display:flex;gap:8px;margin-top:16px;align-items:center"><span class="btn p">Anvend 45 punkter</span><span class="btn">Tjek nu</span><span class="btn">Vis 4 kategorier mere</span><div style="flex:1"></div><span class="d">Gendannelsespunkt oprettes før hver ændring</span><span class="btn r">Fortryd alt</span></div>
+</div>`;
+
+// ---------------------------------------------------------------- B: liste + detaljer
+const rows=CATS.flatMap(([c,items])=>[{g:c},...items.map(i=>({i}))]);
+const sel="'Få endnu mere ud af Windows'";
+const B=`<div class="page">${machineHead('B · Liste + detaljer','Alle punkter som en tabel. Detaljepanelet viser præcis hvad der ændres, før-værdier og fortryd for hvert punkt.')}
+<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+ <div class="seg"><span>Let</span><span class="a">Anbefalet</span><span>Maks</span><span>Egen</span></div>
+ <div style="flex:0 1 260px;height:34px;border:1px solid #232b3b;border-radius:8px;background:#111726;color:#6b7488;padding:8px 12px">Søg i punkter…</div>
+ <div class="seg"><span class="a">Alle 62</span><span>Valgt 45</span><span style="color:#fbbf24">Slået til igen 2</span><span>Fejl 0</span></div>
+ <div style="flex:1"></div><span class="btn">Tjek nu</span><span class="btn p">Anvend</span>
+</div>
+<div class="split"><div class="card" style="overflow:hidden">
+<div class="tr h"><span></span><span>Punkt</span><span>Risiko</span><span>Tilstand</span><span>Fortryd</span></div>
+${rows.map(r=>r.g?`<div class="grp">${r.g}</div>`:`<div class="tr ${r.i[0]==sel?'sel':''}"><span class="dot ${r.i[2]}"></span><span>${r.i[0]}</span><span>${rk(r.i[1])}</span><span>${st[r.i[2]]}</span><span class="d">${r.i[4]?'<span style="color:#f87171">nej</span>':r.i[2]=='ok'||r.i[2]=='dr'?'ja':'–'}</span></div>`).join('')}
+</div>
+<div class="card det"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="n" style="font-size:16px">${sel}</span></div>
+<div style="display:flex;gap:6px;margin-bottom:12px">${rk('sikker')}<span class="bd or">slået til igen</span><span class="bd">Reklamer og forslag</span></div>
+<div class="d" style="font-size:12.5px;color:#b7bfcd;margin-bottom:12px">Den blå skærm efter opdateringer, der foreslår OneDrive, Microsoft 365 og Microsoft-konto, vises ikke.</div>
+<div class="note" style="margin-bottom:12px">Slået til igen efter opdateringen til build 26100.2314 (i går). Fleetdeck anvender det igen i nat.</div>
+<div class="kv"><span>Gælder</span><span>Windows 10 og 11 · alle udgaver</span><span>Brugerprofiler</span><span>3 brugere + standardprofilen</span><span>Anvendt</span><span>12. nov. 2026 af admin</span><span>Før-billede</span><span>gemt · kan fortrydes</span></div>
+<div class="d" style="margin:14px 0 2px;font-weight:600;color:#c7cfdd">Det ændres</div>
+<div class="chg"><div class="mono">HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement</div>
+<div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;margin-top:6px;font-size:12px"><span class="mono" style="color:#cbd2df">ScoobeSystemSettingEnabled</span><span class="d">før: findes ikke</span><span>→ 0</span></div></div>
+<div style="display:grid;grid-template-columns:1fr auto;gap:5px 10px;margin-top:10px;font-size:12px">
+<span>Forælder</span><span class="bd gr">0</span><span>Barn</span><span class="bd or">1 (Windows)</span><span>Gæst</span><span class="bd gr">0</span><span>Standardprofil (nye brugere)</span><span class="bd gr">0</span></div>
+<div style="display:flex;gap:8px;margin-top:16px"><span class="btn p">Anvend igen</span><span class="btn">Fortryd dette punkt</span><span class="btn">Fravælg på denne pc</span></div>
+</div></div></div>`;
+
+// ---------------------------------------------------------------- C: flådeoversigt + niveau-guide
+const cats=["Telemetri","Reklamer","AI","Websøgning","Widgets","Foreslåede apps","Medfølgende apps"];
+const M=[["STUE-PC","Anbefalet",["ok","ok","ok","ok","ok","ok","ok"],"i dag 06:12","24H2 Pro"],
+["ARBEJDS-PC","Maks",["ok","dr","ok","ok","ok","ok","ok"],"i dag 05:40","24H2 Pro"],
+["BÆRBAR-1","Anbefalet",["ok","ok","ok","dr","ok","ok","no"],"i går 21:03","23H2 Home"],
+["GAMING-PC","Let",["off","ok","off","off","off","ok","off"],"i dag 07:55","24H2 Home"],
+["GÆSTE-PC","–",["no","no","no","no","no","no","no"],"aldrig","22H2 Home (Win10)"]];
+const cl={ok:['c-ok','✓'],dr:['c-dr','!'],no:['c-no','–'],off:['c-off','']};
+const C=`<div class="page"><div class="lbl">C · Flådeoversigt + niveau-guide</div><h2>Debloat &amp; privatliv</h2><div class="sub">Én side for alle Windows-pc'er: et felt pr. kategori viser tilstanden på tværs af flåden. Klik en pc for at vælge niveau i tre trin.</div>
+<div style="display:flex;gap:10px;margin-bottom:12px;align-items:center"><div class="card" style="display:flex"><div class="stat"><span class="d">Pc'er</span><b>5</b></div><div class="stat" style="border-left:1px solid #1f2738"><span class="d">Fuldt anvendt</span><b style="color:#34d399">2</b></div><div class="stat" style="border-left:1px solid #1f2738"><span class="d">Slået til igen</span><b style="color:#fbbf24">2</b></div><div class="stat" style="border-left:1px solid #1f2738"><span class="d">Ikke sat op</span><b>1</b></div></div>
+<div style="flex:1"></div><span class="btn">Tjek alle</span><span class="btn p">Anvend på valgte (2)</span></div>
+<div class="card" style="padding:4px 6px;margin-bottom:18px"><div class="mx">
+<div class="hh">Pc</div><div class="hh">Niveau</div>${cats.map(c=>`<div class="hh" style="justify-content:center;text-align:center">${c}</div>`).join('')}<div class="hh">Sidst tjekket</div>
+${M.map((m,i)=>`<div style="gap:9px"><span style="width:14px;height:14px;border:1px solid #3a445a;border-radius:4px;${i==2||i==4?'background:#4f46e5;border-color:#4f46e5':''}"></span><div><div class="n">${m[0]}</div><div class="d">${m[4]}</div></div></div><div>${m[1]=='–'?'<span class="d">Ikke valgt</span>':`<span class="bd">${m[1]}</span>`}</div>${m[2].map(s=>`<div class="cell"><i class="${cl[s][0]}">${cl[s][1]}</i></div>`).join('')}<div class="d">${m[3]}</div>`).join('')}
+</div></div>
+<div class="card" style="padding:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span class="n" style="font-size:15px">GÆSTE-PC · vælg niveau</span><span class="d">Trin 1 af 3</span><div style="flex:1"></div><span class="d">1 Niveau · 2 Tilpas · 3 Anvend</span></div>
+<div class="lvl">
+<div class="lv"><h4>Let <span class="bd gr">14 punkter</span></h4><div class="d">Kun reklamer, forslag og reklame-id. Intet, der kan mærkes i hverdagen.</div><div class="chips"><span>Reklamer</span><span>Forslag i Start</span><span>Edge-shopping</span></div></div>
+<div class="lv a"><h4>Anbefalet <span class="bd">45 punkter</span></h4><div class="d">Telemetri på laveste niveau, reklamer, Copilot og Recall, websøgning, widgets og typiske medfølgende apps.</div><div class="chips"><span>+ Telemetri</span><span>+ Copilot/Recall</span><span>+ Bing i Start</span><span>+ 16 app-punkter</span></div></div>
+<div class="lv"><h4>Maks <span class="bd rd">61 punkter</span></h4><div class="d">Alt fra Anbefalet plus avancerede punkter som Xbox-apps, CEIP-opgaver og placering.</div><div class="chips"><span>+ Xbox</span><span>+ Planlagte opgaver</span><span>+ Placering</span></div></div>
+</div>
+<div style="display:flex;gap:16px;margin-top:14px;align-items:center"><span class="d"><span class="tg on" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Hold håndhævet</span><span class="d"><span class="tg on" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Gendannelsespunkt først</span><div style="flex:1"></div><span class="btn">Tilpas punkter →</span><span class="btn p">Anvend Anbefalet</span></div>
+</div></div>`;
+document.getElementById('out').innerHTML=A+B+C;
+</script></body></html>

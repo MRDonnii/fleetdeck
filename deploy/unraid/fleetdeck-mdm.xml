@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!-- Unraid Docker-skabelon for Fleetdecks MDM-server (NanoHUB = NanoMDM + KMFDDM) – valgfri Apple-styring af iPads.
+     Normalt starter Fleetdeck selv containeren (Indstillinger → Apple-styring → "Gem og start/opdatér"), og så skal denne fil ikke bruges.
+     Kun til manuel opsætning:
+     1) Fleetdeck → Indstillinger → Apple-styring → "Værdier til manuel opsætning": kopiér API-nøgle, webhook-adresse og HMAC-nøgle,
+        og hent enheds-CA'en (fleetdeck-ca.pem) ned i datamappen herunder.
+     2) Kopiér filen til /boot/config/plugins/dockerMan/templates-user/my-fleetdeck-mdm.xml og udfyld felterne.
+        NB: Unraid gemmer værdierne i klartekst på USB-nøglen (/boot) – brug hellere Fleetdecks egen start.
+     3) Skriv containerens interne adresse (http://<IP>:9004) i Fleetdeck.
+     Containeren skal have sin egen IP på br0, så Cloudflare-tunnelen og Fleetdeck kan nå den. Gør ALDRIG /api/v1 offentlig. -->
+<Container version="2">
+  <Name>fleetdeck-mdm</Name>
+  <Repository>ghcr.io/micromdm/nanohub:0.2.0@sha256:3ea7fc5cee6396ed70c2fe26d5c72d57dc9547205d1be2fab0f804bf3de7f7ae</Repository>
+  <Registry>https://github.com/micromdm/nanohub</Registry>
+  <Network>br0</Network>
+  <MyIP></MyIP>
+  <Privileged>false</Privileged>
+  <Overview>MDM-server til Fleetdecks Apple-styring (NanoHUB). Styres af Fleetdeck – har ingen brugerflade.</Overview>
+  <Category>Tools: Network:Management</Category>
+  <WebUI/>
+  <Icon>https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/brand-apple.svg</Icon>
+  <ExtraParams>--restart unless-stopped</ExtraParams>
+  <PostArgs/>
+  <Config Name="Data" Target="/app/db" Default="/mnt/user/appdata/fleetdeck-mdm" Mode="rw" Description="NanoHUBs data (push-certifikat, kø, DDM) og fleetdeck-ca.pem" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/fleetdeck-mdm</Config>
+  <Config Name="API-nøgle" Target="NANOHUB_API_KEY" Default="" Mode="" Description="Fra Fleetdeck (Værdier til manuel opsætning)" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="Webhook" Target="NANOHUB_WEBHOOK_URL" Default="" Mode="" Description="Fra Fleetdeck, fx http://&lt;Fleetdecks IP&gt;:8585/api/mdm/hook/&lt;hemmelighed&gt;" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="Webhook-HMAC" Target="NANOHUB_WEBHOOK_HMAC_KEY" Default="" Mode="" Description="Fra Fleetdeck (bruges af nyere NanoHUB-versioner)" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Enheds-CA" Target="NANOHUB_CA" Default="/app/db/fleetdeck-ca.pem" Mode="" Description="Fleetdecks enheds-CA (læg filen i datamappen)" Type="Variable" Display="advanced" Required="true" Mask="false">/app/db/fleetdeck-ca.pem</Config>
+  <Config Name="Lager" Target="NANOHUB_STORAGE" Default="file" Mode="" Description="file" Type="Variable" Display="advanced" Required="true" Mask="false">file</Config>
+  <Config Name="Lagermappe" Target="NANOHUB_STORAGE_DSN" Default="/app/db/data" Mode="" Description="Mappe i containeren" Type="Variable" Display="advanced" Required="true" Mask="false">/app/db/data</Config>
+  <Config Name="Port" Target="NANOHUB_LISTEN" Default=":9004" Mode="" Description="Lytteadresse" Type="Variable" Display="advanced" Required="true" Mask="false">:9004</Config>
+</Container>

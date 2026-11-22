@@ -1,0 +1,10 @@
+{
+   "blockdevices": [
+      {"name":"sda", "type":"disk", "fstype":null, "mountpoints":[null],
+         "children": [
+            {"name":"sda1", "type":"part", "fstype":"vfat", "mountpoints":["/boot/efi"]},
+            {"name":"sda2", "type":"part", "fstype":"ext4", "mountpoints":["/", "/var/snap/firefox/common/host-hunspell"]}
+         ]
+      }
+   ]
+}

@@ -1,0 +1,39 @@
+# Byg
+bin/
+obj/
+artifacts/
+node_modules/
+web/dist/
+web/*.tsbuildinfo
+src/Fleetdeck.Server/wwwroot/
+.vs/
+*.user
+*.exe
+
+# Personlige filer – ligger kun på sharet og i det private repo (fleetdeck-private)
+/provision/windows/apps.json
+/provision/windows/config.json
+/provision/usb/autounattend.xml
+site.env
+*.local.*
+
+# Store/personlige filer, der kun ligger på WinSetup-sharet
+/provision/windows/Backup/
+/provision/windows/Drivers/
+/provision/windows/Logs/
+/provision/windows/Settings/
+/provision/windows/Agent/
+/provision/windows/Installers/*
+!/provision/windows/Installers/LAES-MIG.txt
+/provision/windows/agent.json
+/provision/pxe/tftp/
+/provision/pxe/win11/
+/provision/pxe/os/
+/provision/pxe/deploy/
+/provision/pxe/drivers/
+/provision/pxe/gui/*.bmp
+*.iso
+*.wim
+src/Fleetdeck.MacMenu/build/
+obj-legacy/
+bin-legacy/

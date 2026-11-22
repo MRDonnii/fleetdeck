@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Byggeværktøj (kører på Linux): Fleetdeck.app-pakke, ad hoc-signatur og DMG – uden Xcode, hdiutil eller root.
+       Brug: se kommentaren øverst i Program.cs -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Fleetdeck.MacPack</RootNamespace>
+    <AssemblyName>fleetdeck-macpack</AssemblyName>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- MacMenuStamp: versionsstemplet, som den native menu skal have for at komme med i pakken -->
+    <ProjectReference Include="../Fleetdeck.Shared/Fleetdeck.Shared.csproj" />
+  </ItemGroup>
+</Project>

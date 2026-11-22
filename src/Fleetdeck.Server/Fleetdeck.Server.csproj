@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Fleetdeck.Server</RootNamespace>
+    <UserSecretsId>fleetdeck-server</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="SSH.NET" />
+    <PackageReference Include="BouncyCastle.Cryptography" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fleetdeck.Shared\Fleetdeck.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Templates\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="EspFirmware\**" />
+    <Content Include="EspFirmware\**" Exclude="EspFirmware\KILDE.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Debloat-motoren (PowerShell) sendes til agenten som et script-job -->
+    <EmbeddedResource Include="Services\DebloatEngine.ps1" LogicalName="DebloatEngine.ps1" />
+    <EmbeddedResource Include="Services\pi-images.json" LogicalName="pi-images.json" />
+    <EmbeddedResource Include="Services\Bios\bios-settings-rules.json" LogicalName="bios-settings-rules.json" />
+  </ItemGroup>
+</Project>

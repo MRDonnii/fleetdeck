@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?><packages count="3">
+  <package>
+    <location>https://download.lenovo.com/pccbbs/thinkcentre_drivers/q9aud01us17_2_.xml</location>
+    <category>Audio</category>
+    <oslangs></oslangs>
+    <checksum type="sha256">1111111111111111111111111111111111111111111111111111111111111111</checksum>
+  </package>
+  <package>
+    <location>https://download.lenovo.com/pccbbs/thinkcentre_bios/q9zjy79usa_2_.xml</location>
+    <category>BIOS UEFI</category>
+    <oslangs></oslangs>
+    <checksum type="sha256">2222222222222222222222222222222222222222222222222222222222222222</checksum>
+  </package>
+  <package>
+    <location>https://download.lenovo.com/pccbbs/thinkcentre_bios/q9zjy7xusa_2_.xml</location>
+    <category>BIOS UEFI</category>
+    <oslangs></oslangs>
+    <checksum type="sha256">3333333333333333333333333333333333333333333333333333333333333333</checksum>
+  </package>
+</packages>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Rigtige skærmbilleder af Mac-opsætningsvinduet uden en Mac: Avalonia.Headless + Skia på Linux, 2× (Retina), lyst og mørkt.
+       Kør: dotnet run, projekt tools/Fleetdeck.SetupShots, med mappen som argument (eller html og mappen: Windows- og Linux-gengivelser som HTML). Data er opdigtede. Ikke en del af udgivelsen. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Headless" />
+    <PackageReference Include="Avalonia.Skia" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fleetdeck.MacApp\Fleetdeck.MacApp.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- Unraid Docker-skabelon for Fleetdeck – ÉN container med web/API, agent-udlevering og netværksboot (PXE).
+     1) Kopiér denne fil til /boot/config/plugins/dockerMan/templates-user/my-Fleetdeck.xml
+     2) Docker → Add Container → Template: Fleetdeck → udfyld IP-adresse og Serveradresse → Apply
+     3) Åbn http://<containerens IP>:8585 – opsætningsguiden opretter administratoren.
+     Billedet hentes fra ghcr.io (stable = seneste færdige udgave). Bygger du selv med deploy/deploy.sh, så skriv fleetdeck:latest.
+     Andre Docker-værter: deploy/compose/docker-compose.yml og docs/installation.md.
+     Containeren har sin egen IP på netværket (br0), fordi netværksboot (DHCP 67, TFTP 69) ikke må dele
+     porte med andre DHCP/TFTP-tjenester på selve serveren. -->
+<Container version="2">
+  <Name>Fleetdeck</Name>
+  <Repository>ghcr.io/mrdonnii/fleetdeck:stable</Repository>
+  <Registry/>
+  <Network>br0</Network>
+  <MyIP></MyIP>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Overview>Fleetdeck: styring og udrulning af pc'er. Programmer og spil, profiler, winget- og Windows-opdateringer, scripts, helbred (SMART, Defender, temperaturer), alarmer, hjælper og netværksinstallation af Windows og Ubuntu (PXE med Secure Boot). Agenten kører som Windows-tjeneste på hver pc.</Overview>
+  <Category>Tools: Network:Management</Category>
+  <WebUI>http://[IP]:[PORT:8585]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/device-desktop-cog.svg</Icon>
+  <ExtraParams>--restart unless-stopped --cap-add=NET_ADMIN</ExtraParams>
+  <PostArgs/>
+  <Config Name="Port" Target="PORT" Default="8585" Mode="" Description="Port til websiden" Type="Variable" Display="always" Required="true" Mask="false">8585</Config>
+  <Config Name="Database" Target="/data" Default="/mnt/user/appdata/fleetdeck" Mode="rw" Description="Database og nøgler" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/fleetdeck</Config>
+  <Config Name="WinSetup-share" Target="/winsetup" Default="/mnt/user/PC-Reinstall/WinSetup" Mode="rw" Description="WinSetup-sharen: installationsfiler, netværksboot (PXE), drivere, backup og agent" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/PC-Reinstall/WinSetup</Config>
+  <Config Name="Serveradresse" Target="SERVER_URL" Default="" Mode="" Description="Adressen som pc'erne bruger til at nå serveren, fx http://192.168.1.29:8585 (containerens egen IP på br0). Ændres den, flytter agenterne selv med." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Netværksboot" Target="PXE" Default="1" Mode="" Description="1 = PXE (proxy-DHCP + TFTP) kører i containeren, 0 = slået fra" Type="Variable" Display="always" Required="false" Mask="false">1</Config>
+  <Config Name="Find automatisk" Target="DISCOVERY" Default="1" Mode="" Description="1 = svar på Find automatisk fra agentens opsætningsvindue (UDP 8586), 0 = slået fra" Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="Indlejring" Target="FRAME_ANCESTORS" Default="'self'" Mode="" Description="Hvilke sider der må vise Fleetdeck i en iframe, fx 'self' http://dashboard.local" Type="Variable" Display="advanced" Required="false" Mask="false">'self'</Config>
+  <Config Name="Tidszone" Target="TZ" Default="Europe/Copenhagen" Mode="" Description="Serverens tidszone (IANA-navn, fx Europe/Stockholm) til planlagte opdateringer og backup. Sprog, tastatur og tidszone til nye installationer vælges i Fleetdeck" Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Copenhagen</Config>
+  <Config Name="https-port" Target="HTTPS_PORT" Default="" Mode="" Description="Valgfri: https ved siden af http, fx 8443 (selvsigneret certifikat i datamappen, som agenterne fastlåser)" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+</Container>

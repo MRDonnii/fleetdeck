@@ -1,0 +1,46 @@
+[
+  {
+    "id": "bookworm-armhf-lite",
+    "title": "Raspberry Pi OS Lite Bookworm 32-bit (legacy)",
+    "debian": "bookworm",
+    "arch": "armhf",
+    "models": ["2", "3", "3B+", "4", "5", "Zero 2 W"],
+    "url": "https://downloads.raspberrypi.com/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2026-10-06/2026-10-06-raspios-bookworm-armhf-lite.img.xz",
+    "sha256": "6332f7a232acd7d05f9499273e9a28783bbf1d23e3b1053784167793159044dd",
+    "size": 520503180,
+    "firstrun": "systemd-run"
+  },
+  {
+    "id": "bookworm-arm64-lite",
+    "title": "Raspberry Pi OS Lite Bookworm 64-bit (legacy)",
+    "debian": "bookworm",
+    "arch": "arm64",
+    "models": ["3", "3B+", "4", "5", "Zero 2 W"],
+    "url": "https://downloads.raspberrypi.com/raspios_oldstable_lite_arm64/images/raspios_oldstable_lite_arm64-2026-10-06/2026-10-06-raspios-bookworm-arm64-lite.img.xz",
+    "sha256": "9e938c5a6981c3f498b3b564c527f3e1fd58ef20bbf703be0eea748384a6c1af",
+    "size": 442245740,
+    "firstrun": "systemd-run"
+  },
+  {
+    "id": "trixie-arm64-lite",
+    "title": "Raspberry Pi OS Lite Trixie 64-bit",
+    "debian": "trixie",
+    "arch": "arm64",
+    "models": ["3", "3B+", "4", "5", "Zero 2 W"],
+    "url": "https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2026-10-06/2026-10-06-raspios-trixie-arm64-lite.img.xz",
+    "sha256": "483db18a48da399b5b7022ffae9a07bc6d99daab30e593aedac09b69ff422843",
+    "size": 550466056,
+    "firstrun": "unverified"
+  },
+  {
+    "id": "trixie-armhf-lite",
+    "title": "Raspberry Pi OS Lite Trixie 32-bit",
+    "debian": "trixie",
+    "arch": "armhf",
+    "models": ["2", "3", "3B+", "4", "5", "Zero 2 W"],
+    "url": "https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2026-10-06/2026-10-06-raspios-trixie-armhf-lite.img.xz",
+    "sha256": "2c302771f34c67a0b7ae7aa2e0dcdd3eac660504be59193c011ba79d412e1632",
+    "size": 569747828,
+    "firstrun": "unverified"
+  }
+]
