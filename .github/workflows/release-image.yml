@@ -3,9 +3,9 @@
 # Udgiv først GitHub-udgivelsen, når dette job er grønt (se docs/OPDATERING.md).
 name: Docker-billede til udgivelse
 
+# Startes i hånden (Actions → Kør workflow med et tag). GHCR-pakken fleetdeck hører endnu til det gamle,
+# private repo, så indtil den er koblet til dette repo, bygges og pushes billedet lokalt.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
