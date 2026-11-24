@@ -123,7 +123,8 @@ public class MacMenuTests
         Assert.Contains("runs-on: macos-latest", wf);
         Assert.Contains("swiftc -O", wf);
         Assert.Contains("codesign --force -s -", wf);
-        Assert.Contains("needs: macmenu", wf);
+        Assert.Contains("needs: [macmenu, test]", wf);   // billedet bygges først, når menuen og testene (tests.yml) er grønne
+        Assert.Contains("uses: ./.github/workflows/tests.yml", wf);
         Assert.Contains("REQUIRE_MAC_MENU=1", wf);
         var df = Repo("Dockerfile");
         Assert.Contains("ARG REQUIRE_MAC_MENU=0", df);

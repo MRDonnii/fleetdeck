@@ -1,0 +1,63 @@
+# Test før udgivelse: .NET-testene (Unix-agenten bygges først – en test kører den), web-testene og tsc.
+# Kører på pull requests og push til main, og kaldes af "Docker-billede til udgivelse", før der bygges et billede.
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Commit/tag der testes (tom = den aktuelle)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ inputs.ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Byg Unix-agenten (en test kører den)
+        run: dotnet build src/Fleetdeck.Agent.Unix/Fleetdeck.Agent.Unix.csproj
+      - name: .NET-test
+        run: dotnet test tests/Fleetdeck.Tests/Fleetdeck.Tests.csproj
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: tsc
+        run: npx tsc -b --noEmit
+      - name: Web-test
+        run: npm test

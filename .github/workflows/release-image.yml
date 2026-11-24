@@ -84,8 +84,16 @@ jobs:
           path: src/Fleetdeck.MacMenu/build/
           if-no-files-found: error
 
+  # samme test som ved push/PR (tests.yml) på præcis det tag, der udgives: fejler den, bygges og lægges intet billede op
+  test:
+    uses: ./.github/workflows/tests.yml
+    permissions:
+      contents: read
+    with:
+      ref: ${{ inputs.tag }}
+
   image:
-    needs: macmenu
+    needs: [macmenu, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
