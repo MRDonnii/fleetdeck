@@ -39,4 +39,12 @@
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <None Include="$(NuGetPackageRoot)sqlite/*/runtimes/linux-x64/native/libe_sqlite3.so" Link="libe_sqlite3.so" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
+  <!-- På Linux kan Windows-runtimepakkens ReadyToRun-udgave af ProtectedData vinde konfliktløsningen (set på GitHub Actions) og
+       giver BadImageFormatException: brug NuGet-pakkens rene IL-udgave ved siden af testene -->
+  <Target Name="IlProtectedDataOnLinux" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <ItemGroup>
+      <_ProtectedData Include="@(PackageVersion)" Condition="'%(Identity)' == 'System.Security.Cryptography.ProtectedData'" />
+    </ItemGroup>
+    <Copy SourceFiles="$(NuGetPackageRoot)system.security.cryptography.protecteddata/%(_ProtectedData.Version)/lib/net10.0/System.Security.Cryptography.ProtectedData.dll" DestinationFolder="$(OutDir)" />
+  </Target>
 </Project>

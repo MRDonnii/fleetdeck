@@ -86,7 +86,8 @@ public sealed partial class ComplianceService(AppDb db, JobService jobs)
             // et lykket installationsjob tæller kun, til inventaret er nyere: er programmet væk i et inventar indsamlet
             // efter jobbet blev færdigt (fx afinstalleret af brugeren), mangler det igen
             if (installed == false && last is { Type: JobTypes.Install, Status: JobStatus.Success } && !(m.LastInventory > last.Finished)) installed = true;
-            if (installed == true && pp.Intent == Intents.Uninstall && last is { Type: JobTypes.Uninstall, Status: JobStatus.Success }) installed = false;
+            // og omvendt: et lykket afinstallationsjob tæller kun, til et nyere inventar ser programmet igen
+            if (installed == true && pp.Intent == Intents.Uninstall && last is { Type: JobTypes.Uninstall, Status: JobStatus.Success } && !(m.LastInventory > last.Finished)) installed = false;
             var failed = last?.Status == JobStatus.Failed;
             string state = last is not null && JobStatus.Active.Contains(last.Status) ? "pending"
                 : pp.Intent switch
@@ -124,6 +125,7 @@ public sealed partial class ComplianceService(AppDb db, JobService jobs)
             // påkrævet program væk i et nyere inventar efter en lykket installation: det vises som "mangler", men udløser ikke
             // selv en installation (ejerens regel) – før stod det som "OK", og der skete intet. Installér det i hånden.
             if (action == JobTypes.Install && i.LastJob is { Type: JobTypes.Install, Status: JobStatus.Success }) continue;
+            if (action == JobTypes.Uninstall && i.LastJob is { Type: JobTypes.Uninstall, Status: JobStatus.Success }) continue;   // samme regel omvendt
             var p = await db.Packages.FindAsync(i.PackageId);
             if (p is null || (p.Type == PackageTypes.File && string.IsNullOrEmpty(p.Identifier))) continue;
             await jobs.ForPackage(machineId, p, action, "compliance", by, save: false);

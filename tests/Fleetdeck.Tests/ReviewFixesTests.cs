@@ -117,6 +117,60 @@ public sealed class ReviewFixesTests : IDisposable
         Assert.False(JobResults.AlreadyFinal(new Job { Status = JobStatus.Failed, Output = "..." + JobResults.NoAnswer }));
     }
 
+    [Fact]
+    public void DuplicateRebootResultDoesNotOverwriteTheFirstBootTime()
+    {
+        // agenten sender resultatet igen (kvitteringen gik tabt), efter maskinen er genstartet: den første opstartstid skal blive stående
+        var oldBoot = T0.AddDays(-3);
+        var m = new Machine { Name = "PC1", LastSeen = T0, HealthJson = Json.Ser(new HealthReport { Live = new LiveFacts { BootAt = oldBoot } }) };
+        var j = new Job { Type = JobTypes.Reboot, Status = JobStatus.Running, Started = T0.AddMinutes(-2) };
+        var r = new JobResult { Status = JobStatus.Success, PowerAt = T0, PowerMode = JobTypes.Reboot };
+        Assert.False(JobResults.AlreadyFinal(j));
+        j.Status = r.Status;
+        Assert.True(PowerWatchService.StartWatch(j, m, r, T0));
+        Assert.True(JobResults.AlreadyFinal(j));   // "genstarter": et resultat mere ændrer intet
+        j.Status = JobStatus.Hung;
+        Assert.True(JobResults.AlreadyFinal(j));   // heller ikke, når den er meldt "hænger"
+        Assert.Equal(oldBoot, j.BootBefore);
+    }
+
+    [Fact]
+    public async Task NewerInventoryWithTheProgramBeatsAnOlderSuccessfulUninstallButUninstallsNothing()
+    {
+        var id = await Setup(T0.AddHours(1));
+        var pp = await _db.ProfilePackages.SingleAsync();
+        pp.Intent = Intents.Uninstall;
+        _db.Add(new MachineWingetId { MachineId = id, Value = "Foo.Bar" });   // programmet er der (geninstalleret)
+        _db.Add(new Job { MachineId = id, PackageId = pp.PackageId, Type = JobTypes.Uninstall, Status = JobStatus.Success, Source = "compliance", Created = T0.AddMinutes(-5), Finished = T0 });
+        await _db.SaveChangesAsync();
+        Assert.Equal("present", Assert.Single(await _comp.Evaluate(id)).State);
+        // ejerens regel: kun den rigtige status – ingen automatisk afinstallation
+        Assert.Equal(0, await _comp.Enforce(id));
+        Assert.Equal(1, await _db.Jobs.CountAsync());
+    }
+
+    [Fact]
+    public async Task OlderInventoryDoesNotOverruleAFreshUninstall()
+    {
+        var id = await Setup(T0.AddHours(-1));
+        var pp = await _db.ProfilePackages.SingleAsync();
+        pp.Intent = Intents.Uninstall;
+        _db.Add(new MachineWingetId { MachineId = id, Value = "Foo.Bar" });
+        _db.Add(new Job { MachineId = id, PackageId = pp.PackageId, Type = JobTypes.Uninstall, Status = JobStatus.Success, Source = "compliance", Created = T0.AddMinutes(-5), Finished = T0 });
+        await _db.SaveChangesAsync();
+        Assert.Equal("ok", Assert.Single(await _comp.Evaluate(id)).State);
+    }
+
+    [Fact]
+    public async Task NeverUninstalledProgramIsStillUninstalledAsBefore()
+    {
+        var id = await Setup(T0);
+        (await _db.ProfilePackages.SingleAsync()).Intent = Intents.Uninstall;
+        _db.Add(new MachineWingetId { MachineId = id, Value = "Foo.Bar" });
+        await _db.SaveChangesAsync();
+        Assert.Equal(1, await _comp.Enforce(id));   // uændret: profilen gennemtvinges som hidtil
+    }
+
     private sealed class NoHub<T> : IHubContext<T> where T : Hub
     {
         public IHubClients Clients { get; } = new NoClients();

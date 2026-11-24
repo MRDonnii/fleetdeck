@@ -65,7 +65,8 @@ public static class JobResults
 {
     public const string NoAnswer = "\n[Server] Intet svar fra agenten i 4 timer.";
     /// <summary>Jobbet har allerede fået sit resultat. Er det kun opgivet af serveren (intet svar), tages et sent resultat imod.</summary>
-    public static bool AlreadyFinal(Job j) => j.Status is JobStatus.Success or JobStatus.Partial
+    /// "Genstarter"/"hænger" er også efter resultatet: et resultat mere må ikke overskrive den første opstartstid (genstart-vagten).
+    public static bool AlreadyFinal(Job j) => j.Status is JobStatus.Success or JobStatus.Partial or JobStatus.Restarting or JobStatus.Hung
         || (j.Status == JobStatus.Failed && !j.Output.EndsWith(NoAnswer, StringComparison.Ordinal));
 }
 

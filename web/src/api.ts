@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
 import { keepLive } from './liveReconnect';
+import { pickProgress, type ProgressValue, type Stamped } from './jobProgress';
 import { QueryClient, useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 
@@ -63,19 +64,26 @@ export function useAction<TArgs, TRes = unknown>(fn: (a: TArgs) => Promise<TRes>
 }
 
 /** Fremdrift for kørende jobs, som agenterne sender løbende (uden at hente alle data igen). */
-type LiveProgress = { progress: number | null; step: string; stepSince?: string | null };
-const progressMap = new Map<number, LiveProgress>();
+type LiveProgress = ProgressValue;
+const progressMap = new Map<number, Stamped>();
 const progressSubs = new Set<() => void>();
 function setProgress(id: number, p: LiveProgress) {
-  progressMap.set(id, p);
+  progressMap.set(id, { ...p, at: Date.now() });
   progressSubs.forEach((f) => f());
 }
 const subscribeProgress = (f: () => void) => { progressSubs.add(f); return () => { progressSubs.delete(f); }; };
 
-/** Seneste fremdrift for et job: live fra serveren, ellers det der kom med job-listen. */
+/** Hvornår job-listens værdi for et job sidst ændrede sig (så en ældre live-værdi ikke hænger fast efter et udfald). */
+const apiSeen = new Map<number, { key: string; at: number }>();
+
+/** Seneste fremdrift for et job: den nyeste af live fra serveren og job-listen (se jobProgress.ts). */
 export function useJobProgress(id: number, progress: number | null | undefined, step: string | undefined, stepSince?: string | null): LiveProgress {
   const live = useSyncExternalStore(subscribeProgress, () => progressMap.get(id));
-  return live ?? { progress: progress ?? null, step: step ?? '', stepSince };
+  const api = { progress: progress ?? null, step: step ?? '', stepSince };
+  const key = `${api.progress}|${api.step}`;
+  let seen = apiSeen.get(id);
+  if (seen?.key !== key) { seen = { key, at: Date.now() }; apiSeen.set(id, seen); }
+  return pickProgress(live, { ...api, at: seen.at });
 }
 
 /** Live-opdateringer: serveren sender "Changed", og vi henter de berørte data igen. */
