@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
+import { keepLive } from './liveReconnect';
 import { QueryClient, useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 
@@ -82,7 +83,8 @@ export function useLiveUpdates(enabled: boolean) {
   const qc = useQueryClient();
   useEffect(() => {
     if (!enabled) return;
-    const conn = new HubConnectionBuilder().withUrl('hubs/ui').withAutomaticReconnect([0, 2000, 5000, 10000, 30000]).configureLogging(LogLevel.Warning).build();
+    // ingen indbygget genforbindelse: keepLive prøver igen (også efter første fejl) med pause op til 60 s og giver aldrig op
+    const conn = new HubConnectionBuilder().withUrl('hubs/ui').configureLogging(LogLevel.Warning).build();
     let timer: number | undefined;
     conn.on('Progress', (m: { jobId: number; progress: number | null; step: string; stepSince?: string | null }) =>
       setProgress(m.jobId, { progress: m.progress, step: m.step, stepSince: m.stepSince }));
@@ -90,7 +92,21 @@ export function useLiveUpdates(enabled: boolean) {
       window.clearTimeout(timer);
       timer = window.setTimeout(() => qc.invalidateQueries(), 400);   // saml mange ændringer i én opdatering
     });
-    conn.start().catch(() => {});
-    return () => { window.clearTimeout(timer); conn.stop(); };
+    let wasUp = false;
+    const live = keepLive(() => conn.start(), () => conn.state === HubConnectionState.Disconnected, () => {
+      if (wasUp) qc.invalidateQueries();   // oppe igen: hent det, der blev ændret imens
+      wasUp = true;
+    });
+    conn.onclose(() => live.closed());
+    const wake = () => { if (document.visibilityState === 'visible') live.kick(); };
+    window.addEventListener('online', live.kick);
+    document.addEventListener('visibilitychange', wake);
+    live.kick();
+    return () => {
+      live.dispose();
+      window.removeEventListener('online', live.kick);
+      document.removeEventListener('visibilitychange', wake);
+      window.clearTimeout(timer); conn.stop();
+    };
   }, [enabled, qc]);
 }

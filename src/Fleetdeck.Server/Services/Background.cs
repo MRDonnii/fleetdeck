@@ -39,7 +39,8 @@ public static class Schedule
     {
         if (LastOccurrence(mode, hhmm, day, now) is not { } occ || now - occ > catchUp) return null;
         // aldrig kørt, eller planen var slået fra: kun inden for en time efter tidspunktet (ellers kører den lige når den slås til)
-        if (handled is null or Off) return now - occ <= TimeSpan.FromHours(1) ? occ : null;
+        // (SettingsService.Get giver "" for en nøgle, der aldrig er gemt – det er også "aldrig kørt")
+        if (string.IsNullOrEmpty(handled) || handled == Off) return now - occ <= TimeSpan.FromHours(1) ? occ : null;
         if (DateTime.TryParseExact(handled, StampFormat, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var h))
             return h >= occ ? null : occ;
         if (DateOnly.TryParse(handled, System.Globalization.CultureInfo.InvariantCulture, out var d) && d >= DateOnly.FromDateTime(occ)) return null;
@@ -57,6 +58,15 @@ public static class Schedule
         }
         return null;
     }
+}
+
+/// <summary>Agenten sender et resultat igen, til serveren har kvitteret (netværksfejl): samme resultat to gange må kun tælle én gang.</summary>
+public static class JobResults
+{
+    public const string NoAnswer = "\n[Server] Intet svar fra agenten i 4 timer.";
+    /// <summary>Jobbet har allerede fået sit resultat. Er det kun opgivet af serveren (intet svar), tages et sent resultat imod.</summary>
+    public static bool AlreadyFinal(Job j) => j.Status is JobStatus.Success or JobStatus.Partial
+        || (j.Status == JobStatus.Failed && !j.Output.EndsWith(NoAnswer, StringComparison.Ordinal));
 }
 
 /// <summary>Planlagte opdateringer og backup, oprydning, alarmer for offline-maskiner og winget-indeks.</summary>
@@ -225,7 +235,7 @@ public sealed class BackgroundWorker(IServiceScopeFactory scopes, ILogger<Backgr
         var now = DateTime.UtcNow;
         await db.Jobs.Where(j => j.Status == JobStatus.Running && (j.ProgressAt ?? j.Started) < now.AddHours(-4))
             .ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, JobStatus.Failed).SetProperty(j => j.Finished, now)
-                .SetProperty(j => j.Output, j => j.Output + "\n[Server] Intet svar fra agenten i 4 timer."));
+                .SetProperty(j => j.Output, j => j.Output + JobResults.NoAnswer));
         await db.Jobs.Where(j => (j.Status == "pending" || j.Status == JobStatus.WaitingUser) && j.Created < now.AddDays(-14))
             .ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, JobStatus.Expired).SetProperty(j => j.Finished, now));
         await db.Metrics.Where(m => m.Ts < now.AddDays(-8)).ExecuteDeleteAsync();

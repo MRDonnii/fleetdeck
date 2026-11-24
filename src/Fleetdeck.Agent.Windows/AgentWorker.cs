@@ -102,6 +102,8 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
                 if (opt.IsService) tray.EnsureTray();
                 // Beskeder: nye beskeder til brugeren (kun fra et godkendt svar) og svar, der ikke nåede frem før
                 if (opt.IsService && gate.Trusted) { await helpdesk.Deliver(api, r.Helpdesk, stop); await helpdesk.Flush(api, stop); }
+                // jobresultater, der ikke nåede frem sidst: send dem igen, til serveren har kvitteret
+                if (!opt.DryRun) await _results.Flush(SendResult(api), m => log.LogInformation("{Msg}", m), stop);
                 jobs.Share = r.Share;
                 if (opt.IsService && gate.Trusted)
                     TerminalAgent.Start(gate.Terminals, cfg.Server, cfg.PlainToken(),
@@ -391,6 +393,10 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
         }
     }
 
+    private PendingResults? _pending;
+    private PendingResults _results => _pending ??= new(Path.Combine(opt.Dir, "results"));
+    private static Func<int, JobResult, CancellationToken, Task> SendResult(ServerClient api) => (id, r, ct) => api.Post($"/api/agent/jobs/{id}/result", r, ct);
+
     private async Task<Next> RunJob(ServerClient api, AgentJob j, CancellationToken stop)
     {
         var start = await api.Post<JobStartResponse>($"/api/agent/jobs/{j.Id}/start", new { }, stop);
@@ -408,7 +414,8 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
         finally { LiveJob.End(j.Id); live.Cancel(); await reporter; tray.Status.Job = null; tray.Status.PowerAt = PlannedPower.Current?.At; tray.Status.PowerMode = PlannedPower.Current?.Mode; tray.Write(); }
         if (job.IsCancellationRequested && !stop.IsCancellationRequested && res.Status != JobStatus.Cancelled)
             res = res with { Status = JobStatus.Cancelled };
-        await api.Post($"/api/agent/jobs/{j.Id}/result", new JobResult
+        // når resultatet ikke frem, gemmes det og sendes igen ved næste check-in (ellers står jobbet som "kører" og ender som fejlet)
+        await _results.Send(j.Id, new JobResult
         {
             Status = res.Status, ExitCode = res.ExitCode, Output = res.Output,
             PowerAt = j.Type is JobTypes.Reboot or JobTypes.Shutdown or JobTypes.CancelPower ? PlannedPower.At : null,
@@ -416,7 +423,7 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
             Ios = res.Ios, Update = res.Update,
             BiosSettings = res.Bios?.BiosSettings, BiosSettingsBefore = res.Bios?.BiosSettingsBefore, BiosApply = res.Bios?.BiosApply,
             BiosUpdate = res.Bios?.BiosUpdate, BiosUsb = res.Bios?.BiosUsb,
-        }, stop);
+        }, SendResult(api), m => log.LogWarning("{Msg}", m), stop);
         log.LogInformation("Job {Id} slut: {Status} ({Code})", j.Id, res.Status, res.ExitCode);
         // nyinstalleret program (fx fjernskrivebord): send helbred med det samme, så det bliver sat op og vist
         if (j.Type is JobTypes.Install or JobTypes.Script && res.Status == JobStatus.Success && jobs.SendHealth is { } sh)

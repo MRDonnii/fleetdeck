@@ -395,6 +395,7 @@ namespace Fleetdeck.Agent.Unix
                     }
                     await MacAppSync.Tick(api, cfg, stop.Token);   // macOS: Fleetdeck.app lægges på, hvis den mangler, og følger agentens version (disk-imaget er signeret)
                     CheckLoop.Start(r.Checks, res => api.Post("/api/agent/checks", res, stop.Token), msg => Console.Error.WriteLine(msg));   // overvågning herfra
+                    await jobs.FlushResults(stop.Token);   // jobresultater, der ikke nåede frem sidst
                     if (r.InventoryDue) await jobs.SendInventory(stop.Token);
                     else if (r.HealthDue) await jobs.SendHealth(stop.Token);
                     if (cfg.PausedUntil > DateTime.UtcNow && r.Jobs.Count > 0)

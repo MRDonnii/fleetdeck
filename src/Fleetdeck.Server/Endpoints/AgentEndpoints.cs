@@ -517,6 +517,8 @@ public static partial class AgentEndpoints
             if (await Auth(ctx, db) is not { } m) return Results.Unauthorized();
             var j = await db.Jobs.FirstOrDefaultAsync(x => x.Id == id && x.MachineId == m.Id);
             if (j is null) return Results.NotFound();
+            // samme resultat igen (agenten sender igen, til den får svar): det er allerede gemt – kvittér uden at gøre noget to gange
+            if (JobResults.AlreadyFinal(j)) return Results.Ok();
             var status = r.Status is JobStatus.Success or JobStatus.Failed or JobStatus.WaitingUser or JobStatus.Cancelled or JobStatus.Partial ? r.Status : JobStatus.Failed;
             // opdateringsmotoren: rundens strukturerede resultat (MaintenanceService læser det)
             if (j.Type == JobTypes.UpdateRound && r.Update is { } upd) j.ResultJson = Json.Ser(upd);

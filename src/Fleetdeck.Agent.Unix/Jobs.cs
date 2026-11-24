@@ -52,6 +52,12 @@ public sealed class JobRunner(Api api, AgentConfig cfg)
         if (h.SysLog is not null) SysLogUnix.Schedule.Sent(logAt);
     }
 
+    /// <summary>Jobresultater, der venter på at nå frem (kun root kan læse dem).</summary>
+    public readonly PendingResults Results = new(AgentConfig.Dir + "/results");
+    private Task SendResult(int id, JobResult r, CancellationToken ct) => api.Post($"/api/agent/jobs/{id}/result", r, ct);
+    /// <summary>Send resultater, der ikke nåede frem sidst, igen – til serveren har kvitteret.</summary>
+    public Task FlushResults(CancellationToken ct) => Results.Flush(SendResult, Log.Info, ct);
+
     /// <summary>Kør ét job. Returnerer false hvis agenten skal stoppe (fjernet).</summary>
     public async Task<bool> Run(AgentJob j, CancellationToken ct)
     {
@@ -95,7 +101,8 @@ public sealed class JobRunner(Api api, AgentConfig cfg)
         catch (Exception e) { res = new JobResult { Status = JobStatus.Failed, Output = e.ToString() }; }
         finally { LiveJob.End(j.Id); live.Cancel(); await reporter; Shell.JobCancel = default; MacTray.JobEnded(); }
         if (job.IsCancellationRequested && !ct.IsCancellationRequested) res.Status = JobStatus.Cancelled;
-        await api.Post($"/api/agent/jobs/{j.Id}/result", res, ct);
+        // når resultatet ikke frem, gemmes det og sendes igen ved næste check-in (ellers står jobbet som "kører" og ender som fejlet)
+        await Results.Send(j.Id, res, SendResult, Log.Warn, ct);
         // en udvidelse (også som script, fx diskhelbred på Mac): programlisten med det samme, så Fleetdeck ser den som installeret
         var extension = j.Title.StartsWith("Udvidelse: ", StringComparison.Ordinal);
         if ((j.Type is JobTypes.Install or JobTypes.Uninstall or JobTypes.RemoveApp or JobTypes.Upgrade or JobTypes.WindowsUpdate or JobTypes.UpdateRound or JobTypes.Inventory
