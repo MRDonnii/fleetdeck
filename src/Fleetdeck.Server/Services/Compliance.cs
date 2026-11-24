@@ -121,11 +121,9 @@ public sealed partial class ComplianceService(AppDb db, JobService jobs)
             var action = i.Intent == Intents.Required && i.State is "missing" or "failed" ? JobTypes.Install
                 : i.Intent == Intents.Uninstall && i.State is "present" or "failed" ? JobTypes.Uninstall : null;
             if (action is null) continue;
-            // påkrævet program væk efter en lykket installation: geninstallér én gang automatisk. Er det allerede geninstalleret
-            // (to lykkede installationer), og inventaret ser det stadig ikke, er det nok genkendelsen – vis "mangler", men ingen løkke
-            if (action == JobTypes.Install && i.LastJob is { Type: JobTypes.Install, Status: JobStatus.Success }
-                && await db.Jobs.CountAsync(j => j.MachineId == machineId && j.PackageId == i.PackageId && j.Type == JobTypes.Install
-                    && j.Status == JobStatus.Success && j.Created >= (m.Enrolled ?? DateTime.MinValue)) >= 2) continue;
+            // påkrævet program væk i et nyere inventar efter en lykket installation: det vises som "mangler", men udløser ikke
+            // selv en installation (ejerens regel) – før stod det som "OK", og der skete intet. Installér det i hånden.
+            if (action == JobTypes.Install && i.LastJob is { Type: JobTypes.Install, Status: JobStatus.Success }) continue;
             var p = await db.Packages.FindAsync(i.PackageId);
             if (p is null || (p.Type == PackageTypes.File && string.IsNullOrEmpty(p.Identifier))) continue;
             await jobs.ForPackage(machineId, p, action, "compliance", by, save: false);

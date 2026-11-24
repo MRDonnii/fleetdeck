@@ -48,7 +48,17 @@ public sealed class ReviewFixesTests : IDisposable
     {
         var id = await Setup(T0.AddHours(1), T0);
         Assert.Equal("missing", Assert.Single(await _comp.Evaluate(id)).State);
-        Assert.Equal(1, await _comp.Enforce(id));   // påkrævet og væk: installeres igen
+        // ejerens regel: det nyere inventar viser kun den rigtige status – ingen automatisk (gen)installation
+        Assert.Equal(0, await _comp.Enforce(id));
+        Assert.Equal(1, await _db.Jobs.CountAsync());
+    }
+
+    [Fact]
+    public async Task NeverInstalledRequiredProgramIsStillInstalledAsBefore()
+    {
+        var id = await Setup(T0);
+        Assert.Equal("missing", Assert.Single(await _comp.Evaluate(id)).State);
+        Assert.Equal(1, await _comp.Enforce(id));   // uændret: profilen gennemtvinges som hidtil
     }
 
     [Fact]
@@ -56,15 +66,6 @@ public sealed class ReviewFixesTests : IDisposable
     {
         var id = await Setup(T0.AddHours(-1), T0);
         Assert.Equal("ok", Assert.Single(await _comp.Evaluate(id)).State);
-        Assert.Equal(0, await _comp.Enforce(id));
-    }
-
-    [Fact]
-    public async Task NoReinstallLoopWhenInventoryNeverSeesTheProgram()
-    {
-        // allerede geninstalleret én gang, og inventaret ser den stadig ikke: vis "mangler", men installér ikke igen og igen
-        var id = await Setup(T0.AddHours(1), T0.AddHours(-8), T0);
-        Assert.Equal("missing", Assert.Single(await _comp.Evaluate(id)).State);
         Assert.Equal(0, await _comp.Enforce(id));
     }
 
