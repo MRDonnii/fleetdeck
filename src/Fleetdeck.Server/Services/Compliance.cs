@@ -75,6 +75,11 @@ public sealed partial class ComplianceService(AppDb db, JobService jobs)
         var lastJobs = (await db.Jobs.Where(j => j.MachineId == machineId && j.PackageId != null && j.Created >= since)
                 .Select(j => new { j.Id, j.PackageId, j.Type, j.Status, j.Created, j.Finished }).ToListAsync())
             .GroupBy(j => j.PackageId!.Value).ToDictionary(g => g.Key, g => g.OrderByDescending(j => j.Id).First());
+        // "Ryd op" sletter lykkede jobs efter 30 dage: den seneste lykkede (af)installation er gemt for sig (PackageOutcome), så
+        // et program ikke pludselig står som "mangler"/"til stede" og sættes i gang igen, bare fordi jobbet er væk
+        foreach (var o in await db.PackageOutcomes.AsNoTracking().Where(o => o.MachineId == machineId && o.Finished >= since).ToListAsync())
+            if (!lastJobs.TryGetValue(o.PackageId, out var lj) || o.Finished > lj.Created)
+                lastJobs[o.PackageId] = new { Id = o.JobId, PackageId = (int?)o.PackageId, o.Type, Status = JobStatus.Success, Created = o.Finished, Finished = (DateTime?)o.Finished };
 
         var hasInv = m.LastInventory is not null;
         var result = new List<ComplianceItem>();
@@ -100,6 +105,15 @@ public sealed partial class ComplianceService(AppDb db, JobService jobs)
                 last is null ? null : new JobBrief(last.Id, last.Type, last.Status, last.Created, last.Finished)));
         }
         return result;
+    }
+
+    /// <summary>Husk en lykket (af)installation uden for jobhistorikken (kaldes, når agenten melder resultatet; gemmes med resten).</summary>
+    public static async Task RecordOutcome(AppDb db, Job j)
+    {
+        if (j is not { PackageId: int pid, Status: JobStatus.Success, Type: JobTypes.Install or JobTypes.Uninstall }) return;
+        var o = await db.PackageOutcomes.FirstOrDefaultAsync(x => x.MachineId == j.MachineId && x.PackageId == pid);
+        if (o is null) db.PackageOutcomes.Add(o = new PackageOutcome { MachineId = j.MachineId, PackageId = pid });
+        o.Type = j.Type; o.JobId = j.Id; o.Finished = j.Finished ?? DateTime.UtcNow;
     }
 
     public static ComplianceSummary Summarize(IEnumerable<ComplianceItem> items)

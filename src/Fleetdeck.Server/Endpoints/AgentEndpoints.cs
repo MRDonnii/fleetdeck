@@ -532,6 +532,7 @@ public static partial class AgentEndpoints
             if (j.Status == JobStatus.Cancelled) status = JobStatus.Cancelled;   // annulleret fra Fleetdeck: det står fast
             if (status == JobStatus.WaitingUser) { j.Status = status; j.Started = null; }
             else { j.Status = status; j.Finished = DateTime.UtcNow; j.ExitCode = r.ExitCode; }
+            await ComplianceService.RecordOutcome(db, j);   // overholdelsen husker det, også når "Ryd op" har slettet jobbet
             // debloat: gem tilstand og før-værdier fra motorens rapport (og håndhæv); rapportlinjen står ikke i historikken
             if (j.Source == DebloatService.Source && j.Type == JobTypes.Script && status != JobStatus.WaitingUser)
             {

@@ -526,6 +526,7 @@ public static partial class AdminEndpoints
         {
             var m = await db.Machines.FindAsync(id);
             if (m is null) return Results.NotFound();
+            await db.PackageOutcomes.Where(o => o.MachineId == id).ExecuteDeleteAsync();
             db.Machines.Remove(m);
             await db.SaveChangesAsync();
             await audit.Log(u.UserName(), "machine.delete", m.Label);

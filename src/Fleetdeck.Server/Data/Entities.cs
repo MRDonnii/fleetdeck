@@ -684,6 +684,20 @@ public class SoftwareIcon
     public DateTime Created { get; set; }
 }
 
+/// <summary>
+/// Seneste lykkede installation/afinstallation af en pakke på en maskine. Slettes ikke af "Ryd op" (jobs gør), så
+/// overholdelsen stadig ved, at programmet er installeret/afinstalleret af Fleetdeck, og ikke selv sætter et job i gang igen.
+/// </summary>
+public class PackageOutcome
+{
+    public long Id { get; set; }
+    public int MachineId { get; set; }
+    public int PackageId { get; set; }
+    [MaxLength(32)] public string Type { get; set; } = "";   // install | uninstall
+    public int JobId { get; set; }
+    public DateTime Finished { get; set; }
+}
+
 public class MachineWingetId
 {
     public long Id { get; set; }

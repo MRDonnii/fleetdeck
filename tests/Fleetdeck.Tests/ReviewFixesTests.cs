@@ -5,6 +5,7 @@ using Fleetdeck.Shared;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Fleetdeck.Tests;
 
@@ -109,6 +110,22 @@ public sealed class ReviewFixesTests : IDisposable
     }
 
     [Fact]
+    public async Task ResultIsOnDiskBeforeItIsSentAndRemovedOnlyAfterTheAcknowledgement()
+    {
+        var dir = Path.Combine(Directory.CreateTempSubdirectory("fd-res-").FullName, "results");
+        try
+        {
+            var q = new PendingResults(dir);
+            var onDiskWhileSending = false;
+            // agenten kan stoppe midt i kaldet: resultatet skal allerede ligge på disken
+            Assert.True(await q.Send(9, new JobResult { Status = JobStatus.Success }, (id, r, ct) => { onDiskWhileSending = q.Waiting().Contains(id); return Task.CompletedTask; }, _ => { }, default));
+            Assert.True(onDiskWhileSending);
+            Assert.Empty(q.Waiting());   // kvitteret: væk
+        }
+        finally { Directory.Delete(Path.GetDirectoryName(dir)!, true); }
+    }
+
+    [Fact]
     public void DuplicateResultIsIgnoredButALateOneAfterTheTimeoutIsAccepted()
     {
         Assert.True(JobResults.AlreadyFinal(new Job { Status = JobStatus.Success }));
@@ -169,6 +186,38 @@ public sealed class ReviewFixesTests : IDisposable
         _db.Add(new MachineWingetId { MachineId = id, Value = "Foo.Bar" });
         await _db.SaveChangesAsync();
         Assert.Equal(1, await _comp.Enforce(id));   // uændret: profilen gennemtvinges som hidtil
+    }
+
+    [Fact]
+    public async Task CleanupOfOldJobsDoesNotTriggerAnAutomaticInstall()
+    {
+        // rigtig database med migreringer: PackageOutcomes fyldes ud fra jobhistorikken, og "Ryd op" må ikke fjerne beskyttelsen
+        using var conn = new SqliteConnection("DataSource=:memory:");
+        conn.Open();
+        using var db = new AppDb(new DbContextOptionsBuilder<AppDb>().UseSqlite(conn).Options);
+        await db.Database.MigrateAsync();
+        var comp = new ComplianceService(db, new JobService(db, new Live(new NoHub<UiHub>(), new NoHub<AgentHub>())));
+        var prof = new Profile { Name = "P", Enforce = true };
+        var pkg = new Package { Name = "Foo", Type = PackageTypes.Winget, Identifier = "Foo.Bar" };
+        db.AddRange(prof, pkg);
+        await db.SaveChangesAsync();
+        db.Add(new ProfilePackage { ProfileId = prof.Id, PackageId = pkg.Id, Intent = Intents.Required });
+        var m = new Machine { Name = "PC1", ProfileId = prof.Id, LastInventory = T0.AddDays(-40).AddHours(1) };
+        db.Add(m);
+        await db.SaveChangesAsync();
+        db.Add(new Job { MachineId = m.Id, PackageId = pkg.Id, Type = JobTypes.Install, Status = JobStatus.Success, Created = T0.AddDays(-40), Finished = T0.AddDays(-40) });
+        await db.SaveChangesAsync();
+        // jobbet fra før opdateringen: migreringen fylder PackageOutcomes ud
+        var migrator = db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>();
+        await migrator.MigrateAsync("20261120235245_AccessBlocks");
+        await migrator.MigrateAsync();
+        Assert.Equal(1, await db.PackageOutcomes.CountAsync());
+        // "Ryd op": lykkede jobs ældre end 30 dage slettes
+        await db.Jobs.Where(j => j.Status == JobStatus.Success && j.Finished < T0.AddDays(-30)).ExecuteDeleteAsync();
+        db.ChangeTracker.Clear();
+        Assert.Equal("missing", Assert.Single(await comp.Evaluate(m.Id)).State);
+        Assert.Equal(0, await comp.Enforce(m.Id));
+        Assert.Equal(0, await db.Jobs.CountAsync());
     }
 
     private sealed class NoHub<T> : IHubContext<T> where T : Hub

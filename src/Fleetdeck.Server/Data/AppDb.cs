@@ -19,6 +19,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<Printer> Printers => Set<Printer>();
     public DbSet<PrinterAssignment> PrinterAssignments => Set<PrinterAssignment>();
     public DbSet<MachineWingetId> WingetIds => Set<MachineWingetId>();
+    public DbSet<PackageOutcome> PackageOutcomes => Set<PackageOutcome>();
     public DbSet<UpgradeItem> Upgrades => Set<UpgradeItem>();
     public DbSet<UpgradeMark> UpgradeMarks => Set<UpgradeMark>();
     public DbSet<Job> Jobs => Set<Job>();
@@ -122,6 +123,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         b.Entity<AccessRequest>().HasIndex(t => t.SecretHash).IsUnique();
         b.Entity<AccessRequest>().HasIndex(t => new { t.State, t.Ip });
         b.Entity<AccessBlock>().HasIndex(t => new { t.Kind, t.Value });
+        b.Entity<PackageOutcome>().HasIndex(o => new { o.MachineId, o.PackageId }).IsUnique();
         b.Entity<MdmEnrollToken>().HasOne<Ipad>().WithMany().HasForeignKey(t => t.IpadId).OnDelete(DeleteBehavior.Cascade);
         b.Entity<MdmCommand>().HasIndex(c => new { c.IpadId, c.Created });
         b.Entity<MdmCommand>().HasOne<Ipad>().WithMany().HasForeignKey(c => c.IpadId).OnDelete(DeleteBehavior.Cascade);

@@ -17,17 +17,25 @@ public sealed class PendingResults(string dir)
     public string Dir => dir;
     private string FileOf(int jobId) => Path.Combine(dir, $"{jobId}.json");
 
-    /// <summary>Send resultatet; lykkes det ikke, gemmes det til næste check-in. Returnerer true, hvis serveren tog imod det nu.</summary>
+    /// <summary>
+    /// Gem resultatet atomisk på disken FØR det sendes, og slet det først, når serveren har kvitteret – så går det heller ikke tabt,
+    /// hvis agenten stopper eller genstarter midt i sendingen. Lykkes det ikke, sendes det igen ved næste check-in.
+    /// Returnerer true, hvis serveren tog imod det nu.
+    /// </summary>
     public async Task<bool> Send(int jobId, JobResult r, Func<int, JobResult, CancellationToken, Task> send, Action<string> log, CancellationToken ct)
     {
-        try { await send(jobId, r, ct); return true; }
-        catch (Exception e) when (e is HttpRequestException { StatusCode: not (HttpStatusCode.NotFound or HttpStatusCode.BadRequest) } or IOException or OperationCanceledException)
+        try { Save(jobId, r); }
+        catch (Exception se) when (se is IOException or UnauthorizedAccessException) { log($"Resultatet af job {jobId} kunne ikke gemmes: {se.Message}"); }
+        try { await send(jobId, r, ct); }
+        catch (HttpRequestException e) when (e.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest) { TryDelete(FileOf(jobId)); throw; }
+        catch (Exception e) when (e is HttpRequestException or IOException or OperationCanceledException)
         {
-            try { Save(jobId, r); log($"Resultatet af job {jobId} nåede ikke frem ({e.Message}) – sendes igen ved næste check-in"); }
-            catch (Exception se) when (se is IOException or UnauthorizedAccessException) { log($"Resultatet af job {jobId} kunne ikke gemmes: {se.Message}"); }
+            log($"Resultatet af job {jobId} nåede ikke frem ({e.Message}) – sendes igen ved næste check-in");
             if (e is OperationCanceledException && ct.IsCancellationRequested) throw;
             return false;
         }
+        TryDelete(FileOf(jobId));
+        return true;
     }
 
     public void Save(int jobId, JobResult r)

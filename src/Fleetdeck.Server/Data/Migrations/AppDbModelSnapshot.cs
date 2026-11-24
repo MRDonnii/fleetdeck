@@ -2394,6 +2394,37 @@ namespace Fleetdeck.Server.Data.Migrations
                     b.ToTable("Packages");
                 });
 
+            modelBuilder.Entity("Fleetdeck.Server.Data.PackageOutcome", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Finished")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JobId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MachineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PackageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MachineId", "PackageId")
+                        .IsUnique();
+
+                    b.ToTable("PackageOutcomes");
+                });
+
             modelBuilder.Entity("Fleetdeck.Server.Data.PiCard", b =>
                 {
                     b.Property<int>("Id")
