@@ -14,7 +14,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { ConnectButton, WebUrlField } from '../design/remote';
 import { DrivesPanel } from '../design/drives';
 import { MachinePrintersPanel } from '../design/printers';
-import { del, notifyErr, post, put, useAction, useApi, useJobProgress } from '../api';
+import { del, notifyErr, post, put, queryClient, useAction, useApi, useJobProgress } from '../api';
 import { useMe } from '../auth';
 import { ago, COMP, fmt, INTENT, JOB, num, presence } from '../format';
 import type { HelperFix, JobRow, MachineDetail, MachineRow, Metric, Profile, Settings, Software, Upgrade } from '../types';
@@ -278,6 +278,16 @@ function confirmDo(o: { title: string; text: string; label: string; color?: stri
 type PowerItem = { key: string; label: string; icon: ReactNode; go: () => void };
 
 /** Knapperne øverst på maskinsiden. Alt der ændrer noget på pc'en skal bekræftes. På mobil samles de i én menu. */
+/** Agenten på en maskine, der aldrig opdateres automatisk: kun efter et udtrykkeligt OK. */
+function askAgentUpdate(id: number, name: string) {
+  modals.openConfirmModal({
+    title: 'Opdatér agenten',
+    children: <Text size="sm">Agenten på <b>{name}</b> opdateres ved næste check-in (inden for en time). Kun agenten skiftes – maskinen genstartes ikke, og programmer og system røres ikke.</Text>,
+    labels: { confirm: 'Opdatér agenten', cancel: 'Annullér' },
+    onConfirm: () => post(`/api/machines/${id}/agent-update`, {}).then(() => queryClient.invalidateQueries()).catch(notifyErr),
+  });
+}
+
 function MachineActions({ m, run, onAction }: { m: MachineDetail; run: Run; onAction: () => void }) {
   const mobile = useMediaQuery('(max-width: 48em)');
   const win = m.platform === 'windows';
@@ -440,7 +450,13 @@ function Overview({ m }: { m: MachineDetail }) {
         <TrustPanel m={m} />
         <Panel title="Agent">
           <KeyValue rows={[
-            ['Version', <Group gap={6}><Code>{m.agentVersion ?? '–'}</Code><Badge variant="light" color={m.agentCurrent ? 'green' : 'yellow'}>{m.agentCurrent ? 'Nyeste' : 'Opdateres'}</Badge></Group>],
+            ['Version', <Group gap={6}><Code>{m.agentVersion ?? '–'}</Code>{m.agentCurrent ? <Badge variant="light" color="green">Nyeste</Badge>
+              : !m.agentUpdate?.blocked ? <Badge variant="light" color="yellow">Opdateres</Badge>
+              : m.agentUpdate.requested ? <Badge variant="light" color="blue">Opdateres ved næste check-in</Badge>
+              : <>
+                <Tooltip label="Maskinen opdateres aldrig automatisk – heller ikke agenten."><Badge variant="light" color="gray">Opdateres ikke automatisk</Badge></Tooltip>
+                {isAdmin && <Button size="compact-xs" variant="light" onClick={() => askAgentUpdate(m.id, m.name)}>Opdatér agenten</Button>}
+              </>}</Group>],
             ['Tilmeldt', fmt(m.enrolled)], ['Sidste inventar', `${fmt(m.lastInventory)} (${ago(m.lastInventory)})`], ['Sidste helbredstjek', fmt(m.lastHealth)],
           ]} />
           <Text size="sm" fw={600} mt="md" mb={6}>Opsætningsprogram til denne maskine</Text>

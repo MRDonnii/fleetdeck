@@ -85,6 +85,7 @@ builder.Services.AddScoped<SetupService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<RecoveryKeyVault>();
 builder.Services.AddSingleton<ReauthTokens>();
+builder.Services.AddSingleton<AgentUpdateGrants>();
 builder.Services.AddSingleton<TerminalGate>();
 builder.Services.AddSingleton<TerminalVault>();
 builder.Services.AddSingleton<TerminalBroker>();

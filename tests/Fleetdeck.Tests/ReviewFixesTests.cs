@@ -238,6 +238,15 @@ public sealed class ReviewFixesTests : IDisposable
         Assert.Equal("3.45.7", AgentCheckin.OfferedVersion(new Machine { Name = "PC1" }, new Profile { Name = "P" }, "3.45.7"));
         Assert.Equal("", AgentCheckin.OfferedVersion(new Machine { Name = "PC1", Protected = true }, null, "3.45.7"));
         Assert.Equal("", AgentCheckin.OfferedVersion(new Machine { Name = "PC1" }, new Profile { Name = "P", UpdNeverAuto = true }, "3.45.7"));
+        // kun med administratorens udtrykkelige OK for netop den maskine – og det udløber af sig selv
+        Assert.Equal("3.45.7", AgentCheckin.OfferedVersion(new Machine { Name = "PC1", Protected = true }, null, "3.45.7", allowed: true));
+        var grants = new AgentUpdateGrants();
+        Assert.False(grants.Active(7));
+        grants.Allow(7);
+        Assert.True(grants.Active(7));
+        Assert.False(grants.Active(8));
+        Assert.False(grants.Active(7, DateTime.UtcNow + AgentUpdateGrants.Lifetime + TimeSpan.FromMinutes(1)));
+        Assert.False(grants.Active(7));
     }
 
     [Fact]
@@ -297,9 +306,14 @@ public sealed class ReviewFixesTests : IDisposable
     {
         var audit = new AuditService(_db);
         await Fleetdeck.Server.Endpoints.BackupEndpoints.LogDownload(audit, "anna", "fleetdeck-backup.fdb", "");
-        await Fleetdeck.Server.Endpoints.BackupEndpoints.LogDownload(audit, "anna", "fleetdeck-backup.fdb", "bytes=1048576-");   // fortsat delhentning: samme hentning
-        var row = Assert.Single(await _db.Audit.ToListAsync());
-        Assert.Equal(("anna", "backup.download", "fleetdeck-backup.fdb"), (row.User, row.Action, row.Detail));
+        // en Range-header vælges af klienten og må aldrig kunne slå loggen fra (heller ikke flere områder, "bagfra" eller start ved 1)
+        foreach (var range in new[] { "bytes=1048576-", "bytes=1-", "bytes=1-2,0-", "bytes=-99999999999", "bytes=00-", "items=1-" })
+            await Fleetdeck.Server.Endpoints.BackupEndpoints.LogDownload(audit, "anna", "fleetdeck-backup.fdb", range);
+        var rows = await _db.Audit.OrderBy(a => a.Id).ToListAsync();
+        Assert.Equal(7, rows.Count);
+        Assert.All(rows, row => Assert.Equal(("anna", "backup.download"), (row.User, row.Action)));
+        Assert.Equal("fleetdeck-backup.fdb", rows[0].Detail);
+        Assert.Equal("fleetdeck-backup.fdb (delhentning: bytes=1-)", rows[2].Detail);
     }
 
     private sealed class NoHub<T> : IHubContext<T> where T : Hub

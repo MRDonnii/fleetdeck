@@ -10,7 +10,7 @@ public static class AgentCheckin
 {
     public static async Task<CheckinResponse> Build(AppDb db, SettingsService s, AgentBinary bin, SigningKeys fileKeys, JobSigningKey jobKey, TlsInfo tls,
         Machine m, CheckinRequest r, int tokenId, string webBase, IReadOnlyList<TerminalTicket>? terminals = null,
-        IReadOnlyList<LiveLogTicket>? liveLogs = null)
+        IReadOnlyList<LiveLogTicket>? liveLogs = null, bool agentUpdateAllowed = false)
     {
         // Ventende tilmelding (navnet fandtes): intet arbejde, ingen adgangsoplysninger før en administrator har godkendt den.
         // "Kræv signerede jobs": jobs leveres kun til agenter, der har pinnet nøglen (de øvrige får stadig opdateringen og opgraderer sig selv).
@@ -38,7 +38,7 @@ public static class AgentCheckin
             PollSeconds = (int)await s.GetNum("poll_seconds", 30),
             InventoryDue = m.InventoryRequested || m.LastInventory is null || m.LastInventory < DateTime.UtcNow.AddHours(-invH),
             HealthDue = m.LastHealth is null || m.LastHealth < DateTime.UtcNow.AddMinutes(-healthM),
-            AgentVersion = OfferedVersion(m, profile, bin.VersionFor(m.Platform, r.Arch)),
+            AgentVersion = OfferedVersion(m, profile, bin.VersionFor(m.Platform, r.Arch), agentUpdateAllowed),
             ServerUrl = await s.Get("server_url"),
             // til ikonet i proceslinjen
             Profile = m.ProfileId is int pid ? await db.Profiles.Where(p => p.Id == pid).Select(p => p.Name).FirstOrDefaultAsync() : null,
@@ -84,13 +84,36 @@ public static class AgentCheckin
 
     /// <summary>
     /// Agentversionen, der tilbydes ved check-in. Tom = "bliv på din version": maskiner, der aldrig må opdateres automatisk
-    /// (<see cref="AutoUpdateGuard"/>), får heller ikke en ny agent af sig selv.
+    /// (<see cref="AutoUpdateGuard"/>), får heller ikke en ny agent af sig selv – kun når en administrator udtrykkeligt har bedt om
+    /// det for netop den maskine (<see cref="AgentUpdateGrants"/>).
     /// </summary>
-    public static string OfferedVersion(Machine m, Profile? profile, string version) => AutoUpdateGuard.Blocked(m, profile) is null ? version : "";
+    public static string OfferedVersion(Machine m, Profile? profile, string version, bool allowed = false) =>
+        allowed || AutoUpdateGuard.Blocked(m, profile) is null ? version : "";
 
     /// <summary>Har agenten allerede præcis disse oplysninger (samme aftryk), sendes de ikke igen.</summary>
     public static bool ShareKept(ShareInfo? share, string? agentHash) =>
         share is not null && agentHash is { Length: > 0 } && string.Equals(agentHash, ShareInfo.HashOf(share), StringComparison.OrdinalIgnoreCase);
+}
+
+/// <summary>
+/// "Opdatér agenten" på en maskine, der aldrig opdateres automatisk: administratorens udtrykkelige OK for én maskine. Gælder kun
+/// agenten (ingen genstart af maskinen), udløber af sig selv og huskes ikke over en genstart af serveren.
+/// </summary>
+public sealed class AgentUpdateGrants
+{
+    public static readonly TimeSpan Lifetime = TimeSpan.FromHours(1);
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<int, DateTime> _until = new();
+
+    public void Allow(int machineId) => _until[machineId] = DateTime.UtcNow + Lifetime;
+    public void Clear(int machineId) => _until.TryRemove(machineId, out _);
+    public bool Active(int machineId) => Active(machineId, DateTime.UtcNow);
+    public bool Active(int machineId, DateTime now)
+    {
+        if (!_until.TryGetValue(machineId, out var until)) return false;
+        if (until > now) return true;
+        _until.TryRemove(machineId, out _);
+        return false;
+    }
 }
 
 /// <summary>

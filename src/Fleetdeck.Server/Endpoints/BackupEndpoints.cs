@@ -19,13 +19,14 @@ public static class BackupEndpoints
     private static IResult Fail(BackupException e) => Results.Problem(e.Message, statusCode: e.Code == "password" ? 422 : 400, extensions: new Dictionary<string, object?> { ["code"] = e.Code });
 
     /// <summary>
-    /// En hentet backup indeholder hele serveren og skrives derfor i audit-loggen ligesom sletning og gendannelse. En delhentning,
-    /// der fortsætter (Range, der ikke starter ved 0), er samme hentning og logges ikke igen.
+    /// En hentet backup indeholder hele serveren og skrives derfor i audit-loggen ligesom sletning og gendannelse. Hver forespørgsel
+    /// logges – også delhentninger (Range), for hvad der faktisk bliver sendt, kan ikke afgøres ud fra en header, klienten selv vælger.
+    /// Ved en delhentning står det ønskede område med i linjen.
     /// </summary>
     public static async Task LogDownload(AuditService audit, string user, string name, string? range)
     {
-        if (range is { Length: > 0 } && !range.Replace(" ", "").StartsWith("bytes=0-", StringComparison.OrdinalIgnoreCase)) return;
-        await audit.Log(user, "backup.download", name);
+        var part = new string((range ?? "").Where(c => c is >= ' ' and <= '~').Take(80).ToArray()).Trim();
+        await audit.Log(user, "backup.download", part.Length == 0 ? name : $"{name} (delhentning: {part})");
     }
 
     public static void MapBackupEndpoints(this WebApplication app)

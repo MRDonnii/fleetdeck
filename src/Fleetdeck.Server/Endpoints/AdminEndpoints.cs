@@ -426,7 +426,7 @@ public static partial class AdminEndpoints
             return Results.File(png, "image/png");
         });
 
-        api.MapGet("/machines/{id:int}", async (int id, AppDb db, MachineViews views, ComplianceService comp, AgentBinary agent, SettingsService settings) =>
+        api.MapGet("/machines/{id:int}", async (int id, AppDb db, MachineViews views, ComplianceService comp, AgentBinary agent, SettingsService settings, AgentUpdateGrants agentGrants) =>
         {
             var m = await db.Machines.AsNoTracking().Include(x => x.Profile).FirstOrDefaultAsync(x => x.Id == id);
             if (m is null) return Results.NotFound();
@@ -478,6 +478,8 @@ public static partial class AdminEndpoints
                 noProfile = m.Profile is null,
                 blocked = AutoUpdateGuard.Blocked(m, m.Profile),
             };
+            // agenten opdaterer ikke sig selv på en spærret maskine – kun efter "Opdatér agenten" (requested)
+            row["agentUpdate"] = new { blocked = AutoUpdateGuard.Blocked(m, m.Profile) is not null, requested = agentGrants.Active(m.Id) };
             row["ignoredAlerts"] = IgnoredAlerts.OnMachine(m).Select(x => new { x.Key, x.Title, x.By, x.At, all = false })
                 .Concat((await IgnoredAlerts.OnAll(settings)).Select(x => new { x.Key, x.Title, x.By, x.At, all = true })).ToList();
             row["serverAgentVersion"] = agent.VersionFor(m.Platform);
@@ -1081,6 +1083,17 @@ public static partial class AdminEndpoints
             return Results.Ok();
         });
         // Ignorér en alarm (fx Defender, der er slået fra med vilje) – på maskinen eller på alle maskiner
+        // Agenten på en maskine, der aldrig opdateres automatisk: kun med administratorens udtrykkelige OK, og kun agenten
+        // (maskinen genstartes ikke, og programmer og system røres ikke).
+        adm.MapPost("/machines/{id:int}/agent-update", async (int id, AppDb db, AgentUpdateGrants grants, AuditService audit, ClaimsPrincipal u) =>
+        {
+            var m = await db.Machines.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (m is null) return Results.NotFound();
+            grants.Allow(id);
+            await audit.Log(u.UserName(), "machine.agent_update", m.Label);
+            return Results.Ok();
+        });
+
         adm.MapPost("/machines/{id:int}/ignore-alert", async (int id, IgnoreAlertRequest r, AppDb db, SettingsService s, HealthService health, AuditService audit, Live live, ClaimsPrincipal u) =>
         {
             var m = await db.Machines.FindAsync(id);

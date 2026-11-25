@@ -212,6 +212,7 @@ export interface MachineDetail extends MachineRow {
   maintenance: MaintenanceRun | null;
   /** Automatisk opdatering: slået fra i profilen, eller spærret (beskyttet maskine / "aldrig automatisk"). */
   autoUpdate?: { off: boolean; blocked: string | null; noProfile?: boolean };
+  agentUpdate?: { blocked: boolean; requested: boolean };
 }
 export type MaintState = 'waiting' | 'running' | 'rebooting' | 'reboot_wait' | 'hung' | 'done' | 'partial' | 'failed' | 'offline' | 'skipped' | 'blocked' | 'superseded';
 export interface UpdateRunReport {

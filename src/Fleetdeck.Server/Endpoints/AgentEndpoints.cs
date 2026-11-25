@@ -229,7 +229,7 @@ public static partial class AgentEndpoints
                 signing ? jobKey.PublicPem : null, await TlsPin(s, tls), o.Pending));
         });
 
-        app.MapPost("/api/agent/checkin", async (CheckinRequest r, HttpContext ctx, AppDb db, SettingsService s, HealthService health, AgentBinary bin, Live live,
+        app.MapPost("/api/agent/checkin", async (CheckinRequest r, HttpContext ctx, AgentUpdateGrants agentGrants, AppDb db, SettingsService s, HealthService health, AgentBinary bin, Live live,
             JobSigningKey jobKey, SigningKeys fileKeys, TlsInfo tls, AuditService audit, Notifier notifier, TerminalBroker terminals) =>
         {
             if (await Auth(ctx, db) is not { } m) return Results.Unauthorized();
@@ -289,7 +289,9 @@ public static partial class AgentEndpoints
             var tickets = channelOk && TerminalEligibility.Why(m, signedMode) is null ? terminals.TakeTickets(m.Id) : [];
             // live-log: samme signerede kanal, men egne billetter (en agent uden live-log får dem aldrig)
             var liveLogs = channelOk && LiveLogEligibility.Why(m, signedMode) is null ? terminals.TakeLiveLogs(m.Id) : [];
-            var resp = await AgentCheckin.Build(db, s, bin, fileKeys, jobKey, tls, m, r, tokenId, Base(ctx, await s.Get("server_url")), tickets, liveLogs);
+            // "Opdatér agenten" (administratorens OK for netop denne maskine) er brugt, når agenten har den aktuelle version
+            if (agentGrants.Active(m.Id) && m.AgentVersion == bin.VersionFor(m.Platform, r.Arch)) agentGrants.Clear(m.Id);
+            var resp = await AgentCheckin.Build(db, s, bin, fileKeys, jobKey, tls, m, r, tokenId, Base(ctx, await s.Get("server_url")), tickets, liveLogs, agentGrants.Active(m.Id));
             return Results.Ok(resp);
         });
 
