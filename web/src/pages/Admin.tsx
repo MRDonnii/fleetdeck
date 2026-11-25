@@ -81,7 +81,7 @@ export function WinSetupPage() {
 // ---------------------------------------------------------------- Log
 // ---------------------------------------------------------------- Indstillinger
 const NUMS: [string, string][] = [['poll_seconds', 'Agent tjekker ind hvert (sek.)'], ['health_minutes', 'Helbredstjek hvert (min.)'], ['inventory_hours', 'Fuldt inventar hver (timer)']];
-const ALERTS: [string, string][] = [['alert_offline_hours', 'Offline-alarm efter (timer)'], ['alert_disk_pct', 'Diskalarm under (% fri)'], ['alert_cpu_temp', 'CPU-temp. alarm (°C)'],
+const ALERTS: [string, string][] = [['alert_disk_pct', 'Diskalarm under (% fri)'], ['alert_cpu_temp', 'CPU-temp. alarm (°C)'],
   ['alert_disk_temp', 'Disk-temp. alarm (°C)'], ['alert_backup_days', 'Backup-alarm efter (dage)'], ['alert_battery_pct', 'Batterialarm under (% af ny)']];
 
 export function SettingsPage() {
@@ -170,6 +170,12 @@ export function SettingsPage() {
               <Group align="flex-end" wrap="nowrap"><TextInput style={{ flex: 1 }} label="Webhook (Discord-webhook eller ntfy, fx https://ntfy.sh/mit-emne)" disabled={ro}
                 value={f.webhook_url ?? ''} onChange={(e) => set('webhook_url', e.currentTarget.value)} />
                 {isAdmin && <Button variant="default" onClick={() => test.mutate(undefined)}>Test</Button>}</Group>
+              <Group align="flex-end" wrap="nowrap">
+                <Switch label="Advar når en maskine ikke har meldt sig" disabled={ro} checked={f.alert_offline_enabled === '1'}
+                  onChange={(e) => set('alert_offline_enabled', e.currentTarget.checked ? '1' : '0')} />
+                <NumberInput label="Efter (dage)" min={1} disabled={ro || f.alert_offline_enabled !== '1'} value={f.alert_offline_days ?? ''}
+                  onChange={(v) => set('alert_offline_days', String(v))} w={140} />
+              </Group>
               <SimpleGrid cols={{ base: 1, sm: 2 }}>{ALERTS.map(([k, l]) => <NumberInput key={k} label={l} disabled={ro} value={f[k] ?? ''} onChange={(v) => set(k, String(v))} />)}</SimpleGrid>
             </Stack>
           </Panel>

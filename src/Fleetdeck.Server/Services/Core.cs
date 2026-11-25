@@ -66,7 +66,7 @@ public sealed class SettingsService(AppDb db)
     {
         ["poll_seconds"] = "30", ["inventory_hours"] = "6", ["health_minutes"] = "30", ["server_url"] = "",
         ["share_path"] = "", ["share_user"] = "", ["share_pass"] = "", ["default_profile_id"] = "",
-        ["enroll_key"] = "", ["webhook_url"] = "", ["alert_offline_hours"] = "24", ["alert_disk_pct"] = "10",
+        ["enroll_key"] = "", ["webhook_url"] = "", ["alert_offline_enabled"] = "0", ["alert_offline_days"] = "1", ["alert_disk_pct"] = "10",
         ["alert_cpu_temp"] = "90", ["alert_disk_temp"] = "70", ["alert_backup_days"] = "7", ["alert_battery_pct"] = "60",
         ["pxe_http"] = "", ["pxe_default_user"] = "",
         ["default_extensions"] = "diskhelbred,fjernskrivebord",
@@ -87,7 +87,7 @@ public sealed class SettingsService(AppDb db)
         [AccessRequestService.ModeSetting] = AccessMode.Lan, [AccessRequestService.MaxSetting] = "10", [AccessRequestService.HoursSetting] = "24",
     };
     public static readonly string[] Public = ["poll_seconds", "inventory_hours", "health_minutes", "server_url", "share_path",
-        "share_user", "default_profile_id", "webhook_url", "alert_offline_hours", "alert_disk_pct", "alert_cpu_temp",
+        "share_user", "default_profile_id", "webhook_url", "alert_offline_enabled", "alert_offline_days", "alert_disk_pct", "alert_cpu_temp",
         "alert_disk_temp", "alert_backup_days", "alert_battery_pct", "pxe_http", "pxe_default_user", "mqtt_host", "mqtt_port", "mqtt_user", "mqtt_prefix", "default_extensions",
         "signed_jobs", "enroll_key_enabled", "tls_pin", "agent_https_url",
         AccessRequestService.ModeSetting, AccessRequestService.MaxSetting, AccessRequestService.HoursSetting];

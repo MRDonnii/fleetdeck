@@ -27,11 +27,14 @@ public sealed class HealthService(AppDb db, SettingsService settings, Compliance
         var h = Json.Des<HealthReport>(m.HealthJson);
         var facts = Json.Des<SystemFacts>(m.FactsJson);
         var o = new List<Finding>();
-        var offlineH = await settings.GetNum("alert_offline_hours", 24);
-        if (m.LastSeen is null || m.LastSeen < DateTime.UtcNow.AddHours(-offlineH))
+        // Offline-advarslen er valgfri (standard fra). Uden den regnes en maskine stadig som "ikke til at vurdere" efter et døgn,
+        // så de øvrige alarmer ikke løses eller fyrer på gamle data – men der vises og sendes ingen offline-advarsel.
+        var offlineDays = await OfflineDays();
+        if (m.LastSeen is null || m.LastSeen < DateTime.UtcNow.AddDays(-(offlineDays ?? 1)))
         {
+            var ago = m.LastSeen is null ? 0 : (DateTime.UtcNow - m.LastSeen.Value).TotalDays;
             o.Add(new("offline", "warning", "Maskinen har ikke meldt sig",
-                m.LastSeen is null ? "Aldrig set" : $"Sidst set for {(DateTime.UtcNow - m.LastSeen.Value).TotalHours:0} timer siden"));
+                m.LastSeen is null ? "Aldrig set" : ago < 2 ? $"Sidst set for {ago * 24:0} timer siden" : $"Sidst set for {ago:0} dage siden"));
             return o;
         }
         if (ReserveDnsStatus.Finding(m.Id, DateTime.UtcNow) is { } rdns) o.Add(rdns);
@@ -228,6 +231,11 @@ public sealed class HealthService(AppDb db, SettingsService settings, Compliance
         @"\b(chrome|firefox|brave|opera|vivaldi|zoom|teams|7-?zip|winrar|vlc|acrobat|adobe reader|java|jre|jdk|notepad\+\+|putty|winscp|filezilla|thunderbird|teamviewer|anydesk|rustdesk|keepass|bitwarden|openssh|git|powershell|office|libreoffice|wireshark)\b",
         System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
+    /// <summary>Dage før offline-advarslen, eller null når advarslen er slået fra (standard).</summary>
+    public Task<double?> OfflineDays() => OfflineDaysFor(settings);
+    public static async Task<double?> OfflineDaysFor(SettingsService s) =>
+        await s.Get("alert_offline_enabled") == "1" ? Math.Max(1, await s.GetNum("alert_offline_days", 1)) : null;
+
     public async Task Evaluate(int machineId)
     {
         var m = await db.Machines.FirstOrDefaultAsync(x => x.Id == machineId);
@@ -235,6 +243,9 @@ public sealed class HealthService(AppDb db, SettingsService settings, Compliance
         // Ignorerede alarmer (fx Defender, som er slået fra med vilje) tæller ikke: ingen alarm, besked, helbredsfradrag eller rettelse
         var ignored = await IgnoredAlerts.Keys(m, settings);
         var firing = (await Rules(m)).Where(f => !ignored.Contains(f.Key)).ToList();
+        // Offline uden slået-til advarsel: de øvrige alarmer står stadig urørte, men selve offline-advarslen vises ikke
+        var offline = firing.Any(f => f.Key == "offline");
+        if (offline && await OfflineDays() is null) firing.RemoveAll(f => f.Key == "offline");
         var now = DateTime.UtcNow;
         var open = await db.Alerts.Where(a => a.MachineId == machineId && a.Resolved == null).ToListAsync();
         var changed = false;
@@ -253,7 +264,6 @@ public sealed class HealthService(AppDb db, SettingsService settings, Compliance
                     f.Key.StartsWith("important:", StringComparison.Ordinal) ? "update" : f.Severity);
         }
         // Offline: de øvrige alarmer kan ikke vurderes – lad dem stå åbne (ellers "løses" de og fyrer igen, når maskinen er tilbage)
-        var offline = firing.Any(f => f.Key == "offline");
         foreach (var a in open.Where(a => (!offline || a.Key == "offline") && firing.All(f => f.Key != a.Key)))
         {
             a.Resolved = now; changed = true;
