@@ -16,9 +16,9 @@ on:
         required: false
         default: ''
 
+# Kun læsning som udgangspunkt: skriveadgang gives alene til jobbet "image" nedenfor
 permissions:
-  contents: write   # GitHub-udgivelsen laves her, når billedet er lagt op
-  packages: write
+  contents: read
 
 jobs:
   # Den native menulinje på Mac (FleetdeckMenu, Swift/AppKit) kan kun bygges med Apples værktøjer: én binær pr. arkitektur,
@@ -95,6 +95,9 @@ jobs:
   image:
     needs: [macmenu, test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # GitHub-udgivelsen laves her, når billedet er lagt op
+      packages: write   # billedet lægges op på ghcr.io
     steps:
       - uses: actions/checkout@v4
         with:

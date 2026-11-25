@@ -368,10 +368,11 @@ namespace Fleetdeck.Agent.Unix
                     var nonce = CommandSigning.NewNonce();
                     var r = await api.Post<CheckinResponse>("/api/agent/checkin",
                         new CheckinRequest { AgentVersion = _version, Arch = Arch, Facts = Collect.Live(), Nonce = nonce, Trust = TrustSetup.Report(cfg, _trustError),
-                            KeepAwake = KeepAwakeMac.Outgoing(), Caps = [TerminalPolicy.Capability, LiveLogPolicy.Capability] }, stop.Token);
+                            KeepAwake = KeepAwakeMac.Outgoing(), Caps = [TerminalPolicy.Capability, LiveLogPolicy.Capability], ShareHash = _share.Hash }, stop.Token);
                     _tlsFailures = 0;
                     // signerede jobs: med pinnet nøgle bruges kun det signerede indhold (se docs/sikkerhed-agent.md)
                     var gate = CommandGate.Apply(r, cfg, CommandSigning.TokenId(cfg.Token), nonce, DateTime.UtcNow);
+                    _share.Apply(r);   // delingens login sendes kun, når det er nyt eller ændret
                     if (gate.ConfigChanged) { cfg.Save(); Log.Info($"Serverens jobnøgle er pinnet ({AgentSigning.Fingerprint(cfg.JobKey!)}). Usignerede jobs afvises herefter."); }
                     if (gate.Error != _trustError)
                     {
@@ -418,6 +419,7 @@ namespace Fleetdeck.Agent.Unix
         }
 
         private string? _trustError;
+        private readonly ShareMemory _share = new();   // delingens login, som serveren kun sender, når det er nyt
         private int _tlsFailures;
 
         /// <summary>Bevidst genstart (launchd starter den nye med det samme): "Hold vågen" slippes ikke imens (låget kan være lukket).</summary>

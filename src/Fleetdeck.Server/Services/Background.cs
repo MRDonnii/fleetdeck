@@ -27,6 +27,19 @@ public static class Schedule
         return null;
     }
 
+    /// <summary>
+    /// Kør planen for hver maskine for sig: fejler én (fx en dårlig profil eller en databasefejl), får resten stadig vinduet.
+    /// Returnerer antallet af maskiner, der fejlede.
+    /// </summary>
+    public static async Task<int> ForEach(IEnumerable<int> machines, Func<int, Task> run, Action<int, Exception> failed)
+    {
+        var errors = 0;
+        foreach (var mid in machines)
+            try { await run(mid); }
+            catch (Exception e) when (e is not OperationCanceledException) { errors++; failed(mid, e); }
+        return errors;
+    }
+
     public const string StampFormat = "yyyy-MM-dd'T'HH:mm";
     public const string Off = "off";
 
@@ -64,10 +77,12 @@ public static class Schedule
 public static class JobResults
 {
     public const string NoAnswer = "\n[Server] Intet svar fra agenten i 4 timer.";
-    /// <summary>Jobbet har allerede fået sit resultat. Er det kun opgivet af serveren (intet svar), tages et sent resultat imod.</summary>
+    /// <summary>Check-in efter en genstart midt i jobbet: serveren lukker jobbet, men agenten kan stadig have det rigtige resultat gemt.</summary>
+    public const string Interrupted = "\n[Server] Afbrudt: maskinen blev genstartet midt i jobbet.";
+    /// <summary>Jobbet har allerede fået sit resultat. Er det kun opgivet af serveren (intet svar eller afbrudt af en genstart), tages et sent resultat imod.</summary>
     /// "Genstarter"/"hænger" er også efter resultatet: et resultat mere må ikke overskrive den første opstartstid (genstart-vagten).
     public static bool AlreadyFinal(Job j) => j.Status is JobStatus.Success or JobStatus.Partial or JobStatus.Restarting or JobStatus.Hung
-        || (j.Status == JobStatus.Failed && !j.Output.EndsWith(NoAnswer, StringComparison.Ordinal));
+        || (j.Status == JobStatus.Failed && !j.Output.EndsWith(NoAnswer, StringComparison.Ordinal) && !j.Output.EndsWith(Interrupted, StringComparison.Ordinal));
 }
 
 /// <summary>Planlagte opdateringer og backup, oprydning, alarmer for offline-maskiner og winget-indeks.</summary>
@@ -170,6 +185,7 @@ public sealed class BackgroundWorker(IServiceScopeFactory scopes, ILogger<Backgr
         var settings = sp.GetRequiredService<SettingsService>();
         var jobs = sp.GetRequiredService<JobService>();
         var audit = sp.GetRequiredService<AuditService>();
+        var log = sp.GetRequiredService<ILogger<BackgroundWorker>>();
         var now = DateTime.Now;
         var today = DateOnly.FromDateTime(now).ToString("O");
         foreach (var p in await db.Profiles.AsNoTracking().ToListAsync())
@@ -214,19 +230,21 @@ public sealed class BackgroundWorker(IServiceScopeFactory scopes, ILogger<Backgr
                         : new MaintPlan(false, [kind], p.RebootPolicy == "after_upgrade" ? "reboot" : "none", false);   // planlagte opdateringer vækker ikke maskiner (det gør vedligeholdelsen)
                     var stamp = DateOnly.FromDateTime(occurrence!.Value).ToString("O");
                     var batch = (kind == "maintenance" ? $"p{p.Id}:{stamp}" : $"s{p.Id}:{kind}:{stamp}") + (plan.Report ? "" : ":silent");
-                    foreach (var mid in machines) await maint.Start(mid, plan, batch, "planlægger", kind == "maintenance" ? "maintenance" : "schedule", occurrence.Value.ToUniversalTime());
-                    await audit.Log("planlægger", $"schedule.{kind}", $"{p.Name}: {machines.Count} maskine(r){(now - occurrence.Value > TimeSpan.FromHours(1) ? $" (indhentet fra {occurrence.Value:yyyy-MM-dd HH:mm})" : "")}");
+                    // planen er allerede stemplet som kørt: én maskine, der fejler, må ikke tage vinduet fra resten af profilen
+                    var failed = await Schedule.ForEach(machines, mid => maint.Start(mid, plan, batch, "planlægger", kind == "maintenance" ? "maintenance" : "schedule", occurrence.Value.ToUniversalTime()),
+                        (mid, e) => { db.ChangeTracker.Clear(); log.LogError(e, "Planlagt {Kind} for profilen {Profile} kunne ikke startes på maskine {Machine}", kind, p.Name, mid); });
+                    await audit.Log("planlægger", $"schedule.{kind}", $"{p.Name}: {machines.Count} maskine(r){(failed > 0 ? $", {failed} fejlede" : "")}{(now - occurrence.Value > TimeSpan.FromHours(1) ? $" (indhentet fra {occurrence.Value:yyyy-MM-dd HH:mm})" : "")}");
                     continue;
                 }
-                foreach (var mid in machines)
+                var failedJobs = await Schedule.ForEach(machines, async mid =>
                 {
                     if (kind == "kit")
                         await jobs.Create(mid, JobTypes.KitBackup, "Planlagt gendannelsespunkt", new JobParams { Paths = p.KitPaths }, RunAs.System, null, "schedule", "planlægger", false);
                     else
                         await jobs.WinSetup(mid, "Backup", "schedule", "planlægger", false);
                     await jobs.Commit(mid);
-                }
-                await audit.Log("planlægger", $"schedule.{kind}", $"{p.Name}: {machines.Count} maskine(r)");
+                }, (mid, e) => { db.ChangeTracker.Clear(); log.LogError(e, "Planlagt {Kind} for profilen {Profile} kunne ikke sættes i kø på maskine {Machine}", kind, p.Name, mid); });
+                await audit.Log("planlægger", $"schedule.{kind}", $"{p.Name}: {machines.Count} maskine(r){(failedJobs > 0 ? $", {failedJobs} fejlede" : "")}");
             }
         }
     }

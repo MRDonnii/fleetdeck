@@ -119,14 +119,14 @@ Sprog, tastatur og tidszone til installationer ligger under **Udrulning**.
 |---|---|---|
 | `PORT` | `8585` | Porten i containeren (http). |
 | `SERVER_URL` | (tom) | Adressen, maskinerne bruger. Vinder over Indstillinger, når den er ny eller ændret. |
-| `TZ` | `Europe/Copenhagen` i billedet, `UTC` i compose-filen | Serverens tidszone til planlagte opdateringer og backup. |
+| `TZ` | `Europe/Copenhagen` | Serverens tidszone til planlagte opdateringer og backup. |
 | `HTTPS_PORT` | (tom) | Slår https til på denne port. Uden `HTTPS_CERT` laves et selvsigneret certifikat, som agenterne fastlåser. |
 | `HTTPS_CERT`, `HTTPS_KEY` | (tom) | Egne PEM-filer til https. |
 | `PXE` | `1` | `0` slår netværksboot (proxy-DHCP og TFTP) fra. |
 | `PXE_INTERFACE` | netkortet med standardruten | Netkort til netværksboot. |
 | `DISCOVERY` | `1` | `0` slår "Find automatisk" fra (UDP 8586, broadcast). |
 | `FRAME_ANCESTORS` | `'self'` | Sider, der må vise Fleetdeck i en iframe. |
-| `TRUSTED_PROXIES` | lokale netværk | Proxyer, hvis `X-Forwarded-For` stoles på. |
+| `TRUSTED_PROXIES` | `127.0.0.0/8, ::1, 172.16.0.0/12` | Proxyer, hvis `X-Forwarded-For` stoles på. Erstatter standardlisten, fx kun din proxys adresse (se [2fa.md](2fa.md#betroede-proxyer)). |
 | `AGENT_SOCKET` | `/data/fleetdeck.sock` | Socket til agenten på selve værten. `0` slår den fra. |
 | `DATA_DIR`, `WINSETUP_DIR` | `/data`, `/winsetup` | Mapperne i containeren (skal normalt ikke ændres). |
 

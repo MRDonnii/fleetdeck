@@ -171,6 +171,8 @@ public sealed class CheckinRequest
     public KeepAwakeChange? KeepAwake { get; set; }
     /// <summary>Hvad agenten kan ud over det grundlæggende (fx terminal). Ældre agenter sender intet.</summary>
     public List<string>? Caps { get; set; }
+    /// <summary>Aftryk af delingens login, som agenten allerede har (<see cref="ShareInfo.HashOf"/>). Ældre agenter sender intet og får det hver gang som før.</summary>
+    public string? ShareHash { get; set; }
 }
 
 public sealed class CheckinResponse
@@ -193,6 +195,8 @@ public sealed class CheckinResponse
     public string ServerUrl { get; set; } = "";
     public List<AgentJob> Jobs { get; set; } = [];
     public ShareInfo? Share { get; set; }
+    /// <summary>Delingens login er uændret og derfor ikke sendt med: agenten bruger det, den har (kun til agenter, der sender <see cref="CheckinRequest.ShareHash"/>).</summary>
+    public bool ShareKept { get; set; }
     /// <summary>Netværksdrev, maskinen skal have (fra profil og maskine). Login: Share.User/Share.Password.</summary>
     public List<DriveSpec> Drives { get; set; } = [];
     /// <summary>Mac: "Hold vågen på strøm (også med lukket låg)". Null = ikke en Mac (eller ældre server).</summary>
@@ -254,6 +258,28 @@ public sealed class ShareInfo
     public string Path { get; set; } = "";
     public string User { get; set; } = "";
     public string Password { get; set; } = "";
+
+    /// <summary>Aftryk (SHA-256) af oplysningerne: agenten melder det ved check-in, så serveren kun sender dem, når de er nye eller ændret.</summary>
+    public static string HashOf(ShareInfo s) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+        System.Text.Encoding.UTF8.GetBytes($"{s.Path}\0{s.User}\0{s.Password}"))).ToLowerInvariant();
+}
+
+/// <summary>
+/// Agentens hukommelse for delingens login: det sendes kun, når agenten ikke allerede har det aktuelle (ikke ved hvert check-in).
+/// Ligger kun i hukommelsen – efter en genstart af agenten sender serveren det igen.
+/// </summary>
+public sealed class ShareMemory
+{
+    private ShareInfo? _held;
+    /// <summary>Aftrykket af det, agenten har (null = intet endnu): sendes som <see cref="CheckinRequest.ShareHash"/>.</summary>
+    public string? Hash => _held is null ? null : ShareInfo.HashOf(_held);
+
+    /// <summary>Efter et check-in: husk nye oplysninger, eller sæt de huskede ind, når serveren melder "uændret".</summary>
+    public void Apply(CheckinResponse r)
+    {
+        if (r.Share is not null) _held = r.Share;
+        else if (r.ShareKept && _held is not null) r.Share = _held;
+    }
 }
 
 public sealed class AgentJob

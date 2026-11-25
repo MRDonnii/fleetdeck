@@ -220,6 +220,88 @@ public sealed class ReviewFixesTests : IDisposable
         Assert.Equal(0, await db.Jobs.CountAsync());
     }
 
+    // ---- 3.45.7 ----
+
+    [Fact]
+    public void LateResultIsAcceptedAfterServerClosedTheJobOnReboot()
+    {
+        // serveren lukkede jobbet ved check-in efter genstarten: agentens gemte, rigtige resultat skal stadig tages imod
+        Assert.False(JobResults.AlreadyFinal(new Job { Status = JobStatus.Failed, Output = "halvvejs" + JobResults.Interrupted }));
+        Assert.False(JobResults.AlreadyFinal(new Job { Status = JobStatus.Failed, Output = JobResults.NoAnswer }));
+        Assert.True(JobResults.AlreadyFinal(new Job { Status = JobStatus.Failed, Output = "fejl fra agenten" }));
+        Assert.True(JobResults.AlreadyFinal(new Job { Status = JobStatus.Success, Output = JobResults.Interrupted }));
+    }
+
+    [Fact]
+    public void ProtectedMachinesAreNotOfferedANewAgentVersion()
+    {
+        Assert.Equal("3.45.7", AgentCheckin.OfferedVersion(new Machine { Name = "PC1" }, new Profile { Name = "P" }, "3.45.7"));
+        Assert.Equal("", AgentCheckin.OfferedVersion(new Machine { Name = "PC1", Protected = true }, null, "3.45.7"));
+        Assert.Equal("", AgentCheckin.OfferedVersion(new Machine { Name = "PC1" }, new Profile { Name = "P", UpdNeverAuto = true }, "3.45.7"));
+    }
+
+    [Fact]
+    public void ShareLoginIsOnlySentWhenTheAgentLacksTheCurrentOne()
+    {
+        var share = new ShareInfo { Path = "\\\\server\\share", User = "u", Password = "p1" };
+        Assert.False(AgentCheckin.ShareKept(share, null));   // ældre agent (intet aftryk): får det som før
+        Assert.False(AgentCheckin.ShareKept(share, ""));
+        Assert.False(AgentCheckin.ShareKept(null, ShareInfo.HashOf(share)));   // ventende tilmelding: intet at beholde
+        // agenten husker det første svar og melder aftrykket; så sendes login ikke igen, og agenten bruger det, den har
+        var mem = new ShareMemory();
+        Assert.Null(mem.Hash);
+        mem.Apply(new CheckinResponse { Share = share });
+        Assert.True(AgentCheckin.ShareKept(share, mem.Hash));
+        var kept = new CheckinResponse { ShareKept = true };
+        mem.Apply(kept);
+        Assert.Equal("p1", kept.Share!.Password);
+        // adgangskoden ændres på serveren: aftrykket passer ikke længere, så det nye sendes
+        Assert.False(AgentCheckin.ShareKept(new ShareInfo { Path = share.Path, User = "u", Password = "p2" }, mem.Hash));
+    }
+
+    [Fact]
+    public async Task CheckinDoesNotOverwriteANewerHealthReport()
+    {
+        var m = new Machine { Name = "PC1", HealthJson = Json.Ser(new HealthReport { Live = new LiveFacts { Cpu = 1 } }) };
+        _db.Add(m);
+        await _db.SaveChangesAsync();
+        // en nyere helbredsrapport gemmes, efter at check-in har læst maskinen
+        var newer = Json.Ser(new HealthReport { Live = new LiveFacts { Cpu = 2 }, Kept = [new KeptService()] });
+        await _db.Machines.Where(x => x.Id == m.Id).ExecuteUpdateAsync(x => x.SetProperty(y => y.HealthJson, newer));
+        await LiveFactsStore.Save(_db, m, new LiveFacts { Cpu = 3 });
+        m.LastSeen = T0;
+        await _db.SaveChangesAsync();
+        var stored = Json.Des<HealthReport>(await _db.Machines.AsNoTracking().Where(x => x.Id == m.Id).Select(x => x.HealthJson).SingleAsync());
+        Assert.Single(stored.Kept!);          // den nyere rapport står der stadig
+        Assert.Equal(3, stored.Live.Cpu);     // med de løbende tal fra check-in
+    }
+
+    [Fact]
+    public async Task OneFailingMachineDoesNotDropTheRestOfTheSchedule()
+    {
+        var started = new List<int>();
+        var failed = new List<int>();
+        var errors = await Schedule.ForEach([1, 2, 3], mid =>
+        {
+            if (mid == 2) throw new InvalidOperationException("dårlig maskine");
+            started.Add(mid);
+            return Task.CompletedTask;
+        }, (mid, _) => failed.Add(mid));
+        Assert.Equal(1, errors);
+        Assert.Equal([1, 3], started);
+        Assert.Equal([2], failed);
+    }
+
+    [Fact]
+    public async Task BackupDownloadIsWrittenToTheAuditLog()
+    {
+        var audit = new AuditService(_db);
+        await Fleetdeck.Server.Endpoints.BackupEndpoints.LogDownload(audit, "anna", "fleetdeck-backup.fdb", "");
+        await Fleetdeck.Server.Endpoints.BackupEndpoints.LogDownload(audit, "anna", "fleetdeck-backup.fdb", "bytes=1048576-");   // fortsat delhentning: samme hentning
+        var row = Assert.Single(await _db.Audit.ToListAsync());
+        Assert.Equal(("anna", "backup.download", "fleetdeck-backup.fdb"), (row.User, row.Action, row.Detail));
+    }
+
     private sealed class NoHub<T> : IHubContext<T> where T : Hub
     {
         public IHubClients Clients { get; } = new NoClients();

@@ -10,7 +10,7 @@
 # Variabler (.env eller miljøet):
 #   FLEETDECK_TAG   stable (standard), beta eller et versionsnummer som 3.24.1
 #   FLEETDECK_PORT  porten på værten (standard 8585)
-#   TZ              serverens tidszone til planlagte opdateringer og backup, fx Europe/Stockholm (standard UTC)
+#   TZ              serverens tidszone til planlagte opdateringer og backup, fx Europe/Stockholm (standard Europe/Copenhagen, som i billedet)
 #   SERVER_URL      adressen som maskinerne bruger til serveren, fx http://192.168.1.10:8585 (kan også sættes i guiden)
 name: fleetdeck
 
@@ -23,7 +23,7 @@ services:
       - "${FLEETDECK_PORT:-8585}:8585"     # web og agenter (http)
       # - "8443:8443"                     # valgfri https: fjern # her og ved HTTPS_PORT nedenfor
     environment:
-      TZ: ${TZ:-UTC}
+      TZ: ${TZ:-Europe/Copenhagen}
       SERVER_URL: ${SERVER_URL:-}
       # Netværksboot (PXE) og "Find automatisk" bruger broadcast og virker ikke bag Dockers NAT.
       # Brug dem med network_mode: host (se nederst) – ellers lad dem være slået fra.

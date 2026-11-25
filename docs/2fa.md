@@ -154,6 +154,11 @@ i loggen og til grænsen for login-forsøg.
 
 - Standard er loopback og Dockers interne net (`127.0.0.0/8, ::1, 172.16.0.0/12`).
   Standarden kan ændres med miljøvariablen `TRUSTED_PROXIES`.
+- **Stram listen:** standarden stoler på hele `172.16.0.0/12`, så en proxy i et Docker-net virker uden opsætning. Kører
+  andre containere i samme net, eller bruges nettet til andet, kan listen begrænses til netop din proxy: skriv dens
+  adresse eller net i **Betroede proxyer**, eller sæt fx `TRUSTED_PROXIES=127.0.0.1, 172.18.0.5`. Det, du skriver,
+  **erstatter** standardlisten (det lægges ikke oveni). Feltet i Indstillinger vinder over miljøvariablen, og et tomt felt
+  giver standarden igen. Intet ændres, før du selv sætter en af dem.
 - Kører en reverse proxy eller et dashboard på en anden maskine, tilføjes dens IP under
   **Indstillinger → Brugere og sikkerhed → Betroede proxyer**. Ellers ser alle brugere bag den ud til at komme fra
   samme adresse.

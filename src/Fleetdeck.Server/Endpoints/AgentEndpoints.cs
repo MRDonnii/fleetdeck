@@ -256,7 +256,7 @@ public static partial class AgentEndpoints
                         .SetProperty(j => j.Output, j => j.Output + "\n[Server] Tilbage med ny opstartstid – genstarten er lykkedes."));
                 var lost = rebooted + await db.Jobs.Where(j => j.MachineId == m.Id && j.Status == JobStatus.Running && j.Type != JobTypes.Reboot && j.Started != null && j.Started < boot)
                     .ExecuteUpdateAsync(x => x.SetProperty(j => j.Status, JobStatus.Failed).SetProperty(j => j.Finished, DateTime.UtcNow)
-                        .SetProperty(j => j.Output, j => j.Output + "\n[Server] Afbrudt: maskinen blev genstartet midt i jobbet."));
+                        .SetProperty(j => j.Output, j => j.Output + JobResults.Interrupted));
                 if (lost > 0) await live.Changed("jobs", m.Id);
             }
             var f = r.Facts;
@@ -269,8 +269,8 @@ public static partial class AgentEndpoints
             var keepAwakeFromMac = m.ReplacesId is null && r.KeepAwake is { } kc && KeepAwakeSync.FromMac(m, kc, DateTime.UtcNow);
             // tidslinjen: en periode uden kontakt og en ny opstart gemmes, før LastSeen og opstartstiden overskrives
             Timeline.OnCheckin(db, m, m.LastSeen, Timeline.BootOf(h.Live, m.LastSeen), Timeline.BootOf(f, DateTime.UtcNow), DateTime.UtcNow);
-            h.Live = f;
-            m.HealthJson = Json.Ser(h);
+            // kun de løbende tal skiftes ud – og kun hvis helbredet ikke er skrevet om imens (en nyere rapport må ikke overskrives)
+            await LiveFactsStore.Save(db, m, f);
             // var den væk (mere end 2 min. uden check-in), starter en ny online-periode
             if (m.OnlineSince is null || m.LastSeen is null || m.LastSeen < DateTime.UtcNow.AddSeconds(-120)) m.OnlineSince = DateTime.UtcNow;
             m.LastSeen = DateTime.UtcNow; m.AgentVersion = r.AgentVersion; m.User = f.User;

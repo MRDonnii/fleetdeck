@@ -73,10 +73,11 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
                 var nonce = CommandSigning.NewNonce();
                 var r = await api.Post<CheckinResponse>("/api/agent/checkin",
                     new CheckinRequest { AgentVersion = _myVersion, Facts = collectors.Live(), Nonce = nonce, Trust = TrustSetup.Report(cfg, _trustError),
-                        Caps = opt.IsService ? [TerminalPolicy.Capability, LiveLogPolicy.Capability] : null }, stop);
+                        Caps = opt.IsService ? [TerminalPolicy.Capability, LiveLogPolicy.Capability] : null, ShareHash = _share.Hash }, stop);
                 _tlsFailures = 0;
                 // signerede jobs: med pinnet nøgle bruges kun det signerede indhold (se docs/sikkerhed-agent.md)
                 var gate = CommandGate.Apply(r, cfg, CommandSigning.TokenId(cfg.PlainToken()), nonce, DateTime.UtcNow);
+                _share.Apply(r);   // delingens login sendes kun, når det er nyt eller ændret
                 if (gate.ConfigChanged)
                 {
                     cfg.Save(opt.ConfigFile);
@@ -155,6 +156,7 @@ public sealed class AgentWorker(AgentOptions opt, IHttpClientFactory httpFactory
     }
 
     private string? _trustError;
+    private readonly ShareMemory _share = new();   // delingens login, som serveren kun sender, når det er nyt
     private int _tlsFailures;
 
     private static bool IsTlsFailure(Exception e)

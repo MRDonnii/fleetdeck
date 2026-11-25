@@ -18,6 +18,16 @@ public static class BackupEndpoints
     private static IResult Bad(string msg) => Results.Problem(msg, statusCode: 400);
     private static IResult Fail(BackupException e) => Results.Problem(e.Message, statusCode: e.Code == "password" ? 422 : 400, extensions: new Dictionary<string, object?> { ["code"] = e.Code });
 
+    /// <summary>
+    /// En hentet backup indeholder hele serveren og skrives derfor i audit-loggen ligesom sletning og gendannelse. En delhentning,
+    /// der fortsætter (Range, der ikke starter ved 0), er samme hentning og logges ikke igen.
+    /// </summary>
+    public static async Task LogDownload(AuditService audit, string user, string name, string? range)
+    {
+        if (range is { Length: > 0 } && !range.Replace(" ", "").StartsWith("bytes=0-", StringComparison.OrdinalIgnoreCase)) return;
+        await audit.Log(user, "backup.download", name);
+    }
+
     public static void MapBackupEndpoints(this WebApplication app)
     {
         var adm = app.MapGroup("/api/backup").RequireAuthorization("admin");
@@ -62,8 +72,12 @@ public static class BackupEndpoints
             return err is null ? Results.Ok() : Bad(err);
         });
 
-        adm.MapGet("/files/{name}", async (string name, SelfBackupService b) =>
-            await b.Find(name) is { } f ? Results.File(f, "application/octet-stream", name, enableRangeProcessing: true) : Results.NotFound());
+        adm.MapGet("/files/{name}", async (string name, HttpContext ctx, SelfBackupService b, AuditService audit, ClaimsPrincipal u) =>
+        {
+            if (await b.Find(name) is not { } f) return Results.NotFound();
+            await LogDownload(audit, u.UserName(), name, ctx.Request.Headers.Range.ToString());
+            return Results.File(f, "application/octet-stream", name, enableRangeProcessing: true);
+        });
 
         adm.MapDelete("/files/{name}", async (string name, SelfBackupService b, AuditService audit, ClaimsPrincipal u) =>
         {
